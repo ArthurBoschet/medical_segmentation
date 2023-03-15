@@ -6,8 +6,9 @@ class Conv3DActivation(nn.Module):
                  in_channels, 
                  out_channels, 
                  kernel_size, 
-                 stride, padding, 
-                 dilation, 
+                 stride=1, 
+                 padding=0, 
+                 dilation=1, 
                  activation=nn.ReLU
                  ):
         '''
@@ -50,9 +51,9 @@ class Conv3DNormActivation(Conv3DActivation):
                  in_channels, 
                  out_channels, 
                  kernel_size, 
-                 stride, 
-                 padding, 
-                 dilation, 
+                 stride=1, 
+                 padding=0, 
+                 dilation=1,  
                  activation=nn.ReLU, 
                  normalization=nn.BatchNorm3d,
                  ):
