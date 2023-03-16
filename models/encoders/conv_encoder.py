@@ -79,6 +79,13 @@ class ConvEncoder(nn.Module):
         
 
     def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (Tuple[torch.Tensor, List[torch.Tensor]]): output and list of skip connections
+        '''
         #we want to save the skip connections
         skip_connections = []
 
