@@ -216,6 +216,7 @@ class ResConvBlock(BaseConvBlock):
         )
         '''
         Combines 3 basic convolutional blocks into one with a residual connection.
+        Inspired by https://arxiv.org/pdf/1706.00120.pdf
         Parameters:
             in_channels (int): Number of channels in the input image
             out_channels (int): Number of channels produced by the convolution
