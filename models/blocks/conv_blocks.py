@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 
-class Conv3DActivation(nn.Module):
+class Conv3DDropoutActivation(nn.Module):
     def __init__(self, 
                  in_channels, 
                  out_channels, 
@@ -9,10 +9,11 @@ class Conv3DActivation(nn.Module):
                  stride=1, 
                  padding=0, 
                  dilation=1, 
-                 activation=nn.ReLU
+                 activation=nn.ReLU,
+                 dropout=0
                  ):
         '''
-        3D convolution followed by non linear activation
+        3D convolution followed by dropout then non linear activation
         Parameters:
             in_channels (int): Number of channels in the input image
             out_channels (int): Number of channels produced by the convolution
@@ -21,8 +22,9 @@ class Conv3DActivation(nn.Module):
             padding (int, tuple or str, optional): Padding added to all six sides of the input. Default: 0
             dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
             activation (def None -> torch.nn.Module): non linear activation used by the block
+            dropout (float): dropout added to the layer
         '''
-        super(Conv3DActivation, self).__init__()
+        super(Conv3DDropoutActivation, self).__init__()
         self.convolution = torch.nn.Conv3d(
                                     in_channels, 
                                     out_channels, 
@@ -31,6 +33,7 @@ class Conv3DActivation(nn.Module):
                                     padding=padding, 
                                     dilation=dilation
                                 )
+        self.dropout = nn.Dropout3d(p=dropout)
         self.activation = activation()
 
     def forward(self, x):
@@ -42,11 +45,12 @@ class Conv3DActivation(nn.Module):
             x (torch.Tensor): (N,C_out,D,H,W) input size
         '''
         x = self.convolution(x)
+        x = self.dropout(x)
         x = self.activation(x)
         return x
   
 
-class Conv3DNormActivation(Conv3DActivation):
+class Conv3DDropoutNormActivation(Conv3DDropoutActivation):
     def __init__(self, 
                  in_channels, 
                  out_channels, 
@@ -56,9 +60,10 @@ class Conv3DNormActivation(Conv3DActivation):
                  dilation=1,  
                  activation=nn.ReLU, 
                  normalization=nn.BatchNorm3d,
+                 dropout=0,
                  ):
         '''
-        3D convolution followed by normalization and then non linear activation
+        3D convolution followed by dropout then normalization and then non linear activation
         Parameters:
             in_channels (int): Number of channels in the input image
             out_channels (int): Number of channels produced by the convolution
@@ -68,15 +73,18 @@ class Conv3DNormActivation(Conv3DActivation):
             dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
             activation (def None -> torch.nn.Module): non linear activation used by the block
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
         '''
     
-        super(Conv3DNormActivation, self).__init__(
+        super(Conv3DDropoutNormActivation, self).__init__(
             in_channels, 
             out_channels, 
-            kernel_size, stride, 
-            padding, 
-            dilation, 
-            activation=activation
+            kernel_size, 
+            stride=stride, 
+            padding=padding, 
+            dilation=dilation, 
+            activation=activation,
+            dropout=dropout
             )
         self.normalization = normalization(out_channels)
 
@@ -89,6 +97,7 @@ class Conv3DNormActivation(Conv3DActivation):
         x (torch.Tensor): (N,C_out,D,H,W) input size
         '''
         x = self.convolution(x)
+        x = self.dropout(x)
         x = self.normalization(x)
         x = self.activation(x)
         return x
@@ -96,8 +105,7 @@ class Conv3DNormActivation(Conv3DActivation):
 
 class BaseConvBlock(nn.Module):
     def __init__(
-            self,
-            in_channels, 
+            self, 
             out_channels, 
             kernel_size, 
             stride=1, 
@@ -105,6 +113,7 @@ class BaseConvBlock(nn.Module):
             dilation=1,  
             activation=nn.ReLU, 
             normalization=nn.BatchNorm3d,
+            dropout=0,
             ):
         super(BaseConvBlock, self).__init__()
         '''
@@ -118,20 +127,22 @@ class BaseConvBlock(nn.Module):
             dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
             activation (def None -> torch.nn.Module): non linear activation used by the block
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
         '''
 
         if normalization is None:
-            self.base_block = lambda in_channels: Conv3DActivation(
+            self.base_block = lambda in_channels: Conv3DDropoutActivation(
                                 in_channels, 
                                 out_channels, 
                                 kernel_size, 
                                 stride=stride, 
                                 padding=padding, 
                                 dilation=dilation,  
-                                activation=activation 
+                                activation=activation,
+                                dropout=dropout 
                             )
         else:
-            self.base_block = lambda in_channels: Conv3DNormActivation(
+            self.base_block = lambda in_channels: Conv3DDropoutNormActivation(
                                 in_channels, 
                                 out_channels, 
                                 kernel_size, 
@@ -140,10 +151,63 @@ class BaseConvBlock(nn.Module):
                                 dilation=dilation,  
                                 activation=activation, 
                                 normalization=normalization,
+                                dropout=dropout 
                             )
             
     def forward(self, x):
         raise NotImplementedError
+    
+
+class SingleConvBlock(BaseConvBlock):
+    def __init__(
+            self,
+            in_channels, 
+            out_channels, 
+            kernel_size, 
+            stride=1, 
+            padding=0, 
+            dilation=1,  
+            activation=nn.ReLU, 
+            normalization=nn.BatchNorm3d,
+            dropout=0
+            ):
+        super(DoubleConvBlock, self).__init__( 
+            out_channels, 
+            kernel_size, 
+            stride=stride, 
+            padding=padding, 
+            dilation=dilation,  
+            activation=activation, 
+            normalization=normalization,
+            dropout=dropout,
+        )
+        '''
+        Combines 2 basic convolutional blocks into one.
+        Parameters:
+            in_channels (int): Number of channels in the input image
+            out_channels (int): Number of channels produced by the convolution
+            kernel_size (int or tuple): Size of the convolving kernel
+            stride (int or tuple, optional): Stride of the convolution. Default: 1
+            padding (int, tuple or str, optional): Padding added to all six sides of the input. Default: 0
+            dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
+            activation (def None -> torch.nn.Module): non linear activation used by the block
+            normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
+        '''
+            
+        self.conv_block =  self.base_block(in_channels)
+
+            
+    def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) input size
+        '''
+        x = self.conv_block(x)
+        return x
 
     
 
@@ -158,9 +222,9 @@ class DoubleConvBlock(BaseConvBlock):
             dilation=1,  
             activation=nn.ReLU, 
             normalization=nn.BatchNorm3d,
+            dropout=0
             ):
-        super(DoubleConvBlock, self).__init__(
-            in_channels, 
+        super(DoubleConvBlock, self).__init__( 
             out_channels, 
             kernel_size, 
             stride=stride, 
@@ -168,6 +232,7 @@ class DoubleConvBlock(BaseConvBlock):
             dilation=dilation,  
             activation=activation, 
             normalization=normalization,
+            dropout=dropout,
         )
         '''
         Combines 2 basic convolutional blocks into one.
@@ -180,6 +245,7 @@ class DoubleConvBlock(BaseConvBlock):
             dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
             activation (def None -> torch.nn.Module): non linear activation used by the block
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
         '''
             
         self.conv_block_1 =  self.base_block(in_channels)
@@ -187,6 +253,13 @@ class DoubleConvBlock(BaseConvBlock):
 
             
     def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) input size
+        '''
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
         return x
@@ -203,9 +276,9 @@ class ResConvBlock(BaseConvBlock):
             dilation=1,  
             activation=nn.ReLU, 
             normalization=nn.BatchNorm3d,
+            dropout=0,
             ):
         super(ResConvBlock, self).__init__(
-            in_channels, 
             out_channels, 
             kernel_size, 
             stride=stride, 
@@ -213,6 +286,7 @@ class ResConvBlock(BaseConvBlock):
             dilation=dilation,  
             activation=activation, 
             normalization=normalization,
+            dropout=dropout
         )
         '''
         Combines 3 basic convolutional blocks into one with a residual connection.
@@ -226,6 +300,7 @@ class ResConvBlock(BaseConvBlock):
             dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
             activation (def None -> torch.nn.Module): non linear activation used by the block
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
         '''
             
         self.conv_block_1 =  self.base_block(in_channels)
@@ -234,6 +309,13 @@ class ResConvBlock(BaseConvBlock):
 
             
     def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) input size
+        '''
         #first convolution
         x = self.conv_block_1(x)
 
