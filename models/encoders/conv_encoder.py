@@ -100,7 +100,7 @@ class ConvEncoder(nn.Module):
 
         for c_out in self.num_channels_list:
             dim = conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1)
-            dim = conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1)
+            dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
             dimensions.append()
 
         return dimensions
