@@ -108,6 +108,7 @@ class BaseConvBlock(nn.Module):
             ):
         super(BaseConvBlock, self).__init__()
         '''
+        Initializes the self.baseblock function (either normalization or not)
         Parameters:
             in_channels (int): Number of channels in the input image
             out_channels (int): Number of channels produced by the convolution
@@ -189,3 +190,59 @@ class DoubleConvBlock(BaseConvBlock):
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
         return x
+    
+
+class ResConvBlock(BaseConvBlock):
+    def __init__(
+            self,
+            in_channels, 
+            out_channels, 
+            kernel_size, 
+            stride=1, 
+            padding=0, 
+            dilation=1,  
+            activation=nn.ReLU, 
+            normalization=nn.BatchNorm3d,
+            ):
+        super(ResConvBlock, self).__init__(
+            in_channels, 
+            out_channels, 
+            kernel_size, 
+            stride=stride, 
+            padding=padding, 
+            dilation=dilation,  
+            activation=activation, 
+            normalization=normalization,
+        )
+        '''
+        Combines 3 basic convolutional blocks into one with a residual connection.
+        Parameters:
+            in_channels (int): Number of channels in the input image
+            out_channels (int): Number of channels produced by the convolution
+            kernel_size (int or tuple): Size of the convolving kernel
+            stride (int or tuple, optional): Stride of the convolution. Default: 1
+            padding (int, tuple or str, optional): Padding added to all six sides of the input. Default: 0
+            dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
+            activation (def None -> torch.nn.Module): non linear activation used by the block
+            normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+        '''
+            
+        self.conv_block_1 =  self.base_block(in_channels)
+        self.conv_block_2 =  self.base_block(out_channels)
+        self.conv_block_3 =  self.base_block(out_channels)
+
+            
+    def forward(self, x):
+        #save the the skip value for the residual connection after 1st convolution
+        x1 = self.conv_block_1(x)
+
+        #second convolution
+        x2 = self.conv_block_2(x1)
+
+        #third convolution
+        x3 = self.conv_block_2(x2)
+
+        #skip connection
+        x = x3 + x1
+        return x
+
