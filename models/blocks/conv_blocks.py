@@ -42,7 +42,7 @@ class Conv3DDropoutActivation(nn.Module):
             x (torch.Tensor): (N,C_in,D,H,W) input size
 
         Returns:
-            x (torch.Tensor): (N,C_out,D,H,W) input size
+            x (torch.Tensor): (N,C_out,D,H,W) output size
         '''
         x = self.convolution(x)
         x = self.dropout(x)
@@ -94,7 +94,7 @@ class Conv3DDropoutNormActivation(Conv3DDropoutActivation):
         x (torch.Tensor): (N,C_in,D,H,W) input size
 
         Returns:
-        x (torch.Tensor): (N,C_out,D,H,W) input size
+        x (torch.Tensor): (N,C_out,D,H,W) output size
         '''
         x = self.convolution(x)
         x = self.dropout(x)
@@ -204,7 +204,7 @@ class SingleConvBlock(BaseConvBlock):
         x (torch.Tensor): (N,C_in,D,H,W) input size
 
         Returns:
-        x (torch.Tensor): (N,C_out,D,H,W) input size
+        x (torch.Tensor): (N,C_out,D,H,W) output size
         '''
         x = self.conv_block(x)
         return x
@@ -258,7 +258,7 @@ class DoubleConvBlock(BaseConvBlock):
         x (torch.Tensor): (N,C_in,D,H,W) input size
 
         Returns:
-        x (torch.Tensor): (N,C_out,D,H,W) input size
+        x (torch.Tensor): (N,C_out,D,H,W) output size
         '''
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
@@ -314,7 +314,7 @@ class ResConvBlock(BaseConvBlock):
         x (torch.Tensor): (N,C_in,D,H,W) input size
 
         Returns:
-        x (torch.Tensor): (N,C_out,D,H,W) input size
+        x (torch.Tensor): (N,C_out,D,H,W) output size
         '''
         #first convolution
         x = self.conv_block_1(x)
