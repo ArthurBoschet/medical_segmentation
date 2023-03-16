@@ -233,16 +233,19 @@ class ResConvBlock(BaseConvBlock):
 
             
     def forward(self, x):
-        #save the the skip value for the residual connection after 1st convolution
-        x1 = self.conv_block_1(x)
-
-        #second convolution
-        x2 = self.conv_block_2(x1)
-
-        #third convolution
-        x3 = self.conv_block_2(x2)
+        #first convolution
+        x = self.conv_block_1(x)
 
         #skip connection
-        x = x3 + x1
+        x_skip = x
+
+        #second convolution
+        x = self.conv_block_2(x)
+
+        #third convolution
+        x = self.conv_block_3(x)
+
+        #skip connection
+        x = x + x_skip
         return x
 
