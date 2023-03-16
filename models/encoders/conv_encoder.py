@@ -30,6 +30,7 @@ class ConvEncoder(nn.Module):
             downsampling (blocks.conv)
             dropout (float): dropout added to the layer
         '''
+        super(ConvEncoder, self).__init__()
 
         assert kernel_size % 2 == 1, "kernel size should be an odd number (standard practice)"
 

@@ -7,7 +7,7 @@ class Downscale(nn.Module):
         Parameters:
             downscale_factor (int): factor by which to downscale the tensor
         '''
-        super(MaxPool3dDownscale, self).__init__()
+        super(Downscale, self).__init__()
         self.downscale_factor = downscale_factor
 
     def forward(self, x):
