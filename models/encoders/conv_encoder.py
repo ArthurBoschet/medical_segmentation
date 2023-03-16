@@ -88,11 +88,12 @@ class ConvEncoder(nn.Module):
             #pass through convolutional block
             x = self.conv_blocks[i](x)
 
-            #save skip connection
-            skip_connections.append(x)
-
             #downscale unless last conv block
             if i < self.num_blocks - 1:
+                #save skip connection
+                skip_connections.append(x)
+                
+                #downscale
                 x = self.downscaling_layers[i](x)
 
         return x, skip_connections
@@ -101,9 +102,10 @@ class ConvEncoder(nn.Module):
         #output dimension at each 
         dimensions=[tuple([1] + list(self.input_shape))]
 
-        for c_out in self.num_channels_list:
+        for i, c_out in enumerate(self.num_channels_list):
             dim = conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1)
-            dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
+            if i < self.num_blocks - 1:
+                dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
             dimensions.append(dim)
 
         return dimensions
