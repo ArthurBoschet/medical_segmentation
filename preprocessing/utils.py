@@ -74,7 +74,7 @@ def add_padding(input_folder):
                 max_width = data.shape[2]
     for type in ['imagesTr', 'labelsTr']:
         dir = os.path.join(input_folder, type)
-        out_dir = os.path.join(f'{input_folder}_pad', type)
+        out_dir = os.path.join(f'{input_folder[:-8]}_pad/{input_folder[-7:]}', type)
         os.makedirs(out_dir, exist_ok=True)
         for file in tqdm(os.listdir(dir)):
             if file.endswith('.npy'):

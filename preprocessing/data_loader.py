@@ -12,6 +12,7 @@ from utils import convert_to_numpy, add_padding, get_data
 
 def load_data(task_folder_path, 
               dataset_type="raw", 
+              stage="stage_0",
               val_size=0.2, 
               batch_size=1, 
               shuffle=True):
@@ -23,6 +24,9 @@ def load_data(task_folder_path,
             Path to the folder containing the data for the task
         dataset_type: str
             Type of dataset to load (raw, cropped, preprocessed, preprocessed_pad)
+        stage: str
+            Stage of preprocessing to load (stage_0, stage_1)
+            Only applicable if dataset_type is preprocessed or preprocessed_pad
         val_size: float
             Proportion of the data to use for validation
         batch_size: int
@@ -57,21 +61,32 @@ def load_data(task_folder_path,
     │   │   ├── label_000.npy
     │   │   ├── ...
     ├── preprocessed
-    │   ├── imagesTr
-    │   │   ├── image_000.npy
-    │   │   ├── ...
-    │   ├── labelsTr
-    │   │   ├── label_000.npy
-    │   │   ├── ...
+    │   ├── stage_0
+    │   │   ├── imagesTr
+    │   │   │   ├── image_000.npy
+    │   │   │   ├── ...
+    │   │   ├── labelsTr
+    │   │   │   ├── label_000.npy
+    │   │   │   ├── ...
+    │   ├── stage_1
+    │   │   ├── imagesTr
+    │   │   │   ├── image_000.npy
+    │   │   │   ├── ...
+    │   │   ├── labelsTr
+    │   │   │   ├── label_000.npy
+    │   │   │   ├── ...
     ├── preprocessed_pad
-    │   ├── imagesTr
-    │   │   ├── image_000.npy
-    │   │   ├── ...
-    │   ├── labelsTr
-    │   │   ├── label_000.npy
-    │   │   ├── ...
+    │   ├── stage_0
+    │   │   ├── imagesTr
+    │   │   │   ├── image_000.npy
+    │   │   │   ├── ...
+    │   │   ├── labelsTr
+    │   │   │   ├── label_000.npy
+    │   │   │   ├── ...
     ├── dataset.json
     '''
+    assert dataset_type in ["raw", "cropped", "preprocessed", "preprocessed_pad"], "dataset_type must be one of raw, cropped, preprocessed, preprocessed_pad"
+    assert stage in ["stage_0", "stage_1"], "stage must be one of stage_0, stage_1"
     # check if the data has already been preprocessed
     if not os.path.exists(os.path.join(task_folder_path, 'preprocessed')):
         preprocess_data(task_folder_path)
@@ -81,15 +96,22 @@ def load_data(task_folder_path,
         convert_to_numpy(os.path.join(task_folder_path, 'raw'))
     if not os.listdir(os.path.join(task_folder_path, 'cropped', 'imagesTr'))[0].endswith('.npy'):
         convert_to_numpy(os.path.join(task_folder_path, 'cropped'))
-    if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'imagesTr'))[0].endswith('.npy'):
-        convert_to_numpy(os.path.join(task_folder_path, 'preprocessed'))
+    if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr')):
+        if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr'))[0].endswith('.npy'):
+            convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_0'))
+    if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr')):
+        if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr'))[0].endswith('.npy'):
+            convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_1'))
 
-    # add padding to the preprocessed images and labels
+    # add padding to the stage 0 preprocessed images and labels
     if not os.path.exists(os.path.join(task_folder_path, 'preprocessed_pad')):
-        add_padding(os.path.join(task_folder_path, 'preprocessed'))
+        add_padding(os.path.join(task_folder_path, 'preprocessed', 'stage_0'))
 
     # get the data from the given dataset_type
-    images, labels = get_data(os.path.join(task_folder_path, dataset_type))
+    if dataset_type == "preprocessed" or dataset_type == "preprocessed_pad":
+        images, labels = get_data(os.path.join(task_folder_path, dataset_type, stage))
+    else:
+        images, labels = get_data(os.path.join(task_folder_path, dataset_type))
 
     # split the data into training and validation sets
     train_images, val_images, train_labels, val_labels = train_test_split(images, labels, test_size=val_size, random_state=42)
@@ -112,7 +134,7 @@ def preprocess_data(task_folder_path):
         task_folder_path: str 
             Path to the task folder
 
-    If NO preprocessing has been done, folder structure should be:
+    The folder structure should be:
 
     task_folder_path
     ├── imagesTr
@@ -125,35 +147,6 @@ def preprocess_data(task_folder_path):
     │   ├── la_000.nii.gz
     │   ├── ...
     ├── dataset.json
-
-    After preprocessing has been done, folder structure will be:
-
-    task_folder_path
-    ├── raw
-    │   ├── imagesTr
-    │   │   ├── la_000_0000.nii.gz
-    │   │   ├── ...
-    │   ├── labelsTr
-    │   │   ├── la_000.nii.gz
-    │   │   ├── ...
-    │   ├── imagesTs
-    │   │   ├── la_000_0000.nii.gz
-    │   │   ├── ...
-    ├── cropped
-    │   ├── imagesTr
-    │   │   ├── la_000.npz
-    │   │   ├── ...
-    │   ├── labelsTr
-    │   │   ├── la_000.npz
-    │   │   ├── ...
-    ├── preprocessed
-    │   ├── imagesTr
-    │   │   ├── la_000.npz
-    │   │   ├── ...
-    │   ├── labelsTr
-    │   │   ├── la_000.npz
-    │   │   ├── ...
-    ├── dataset.json
     '''
     convert_decathlon_task(task_folder_path)
     preprocess_task(task_folder_path)
@@ -164,20 +157,27 @@ def preprocess_data(task_folder_path):
     shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'raw'), os.path.join(task_folder_path))
 
     # cropped
-    os.mkdir(os.path.join(task_folder_path, 'cropped'))
-    os.mkdir(os.path.join(task_folder_path, 'cropped', 'imagesTr'))
-    os.mkdir(os.path.join(task_folder_path, 'cropped', 'labelsTr'))
+    os.makedirs(os.path.join(task_folder_path, 'cropped', 'imagesTr'))
+    os.makedirs(os.path.join(task_folder_path, 'cropped', 'labelsTr'))
     for file in os.listdir(os.path.join(task_folder_path, 'preprocessed_data', 'cropped')):
         if file.endswith('.npz'):
             shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'cropped', file), os.path.join(task_folder_path, 'cropped', 'imagesTr', file))
     
-    # preprocessed
-    os.mkdir(os.path.join(task_folder_path, 'preprocessed'))
-    os.mkdir(os.path.join(task_folder_path, 'preprocessed', 'imagesTr'))
-    os.mkdir(os.path.join(task_folder_path, 'preprocessed', 'labelsTr'))
-    for file in os.listdir(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_2D_stage0')):
-        if file.endswith('.npz'):
-            shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_2D_stage0', file), os.path.join(task_folder_path, 'preprocessed', 'imagesTr', file))
+    # preprocessed -- stage 0
+    if os.path.exists(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage0')):
+        os.makedirs(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr'))
+        os.makedirs(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'labelsTr'))
+        for file in os.listdir(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage0')):
+            if file.endswith('.npz'):
+                shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage0', file), os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr', file))
+
+    # preprocessed -- stage 1
+    if os.path.exists(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage1')):
+        os.makedirs(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr'))
+        os.makedirs(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'labelsTr'))
+        for file in os.listdir(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage1')):
+            if file.endswith('.npz'):
+                shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage1', file), os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr', file))
 
     # remove useless folders
     shutil.rmtree(os.path.join(task_folder_path, 'preprocessed_data'))
