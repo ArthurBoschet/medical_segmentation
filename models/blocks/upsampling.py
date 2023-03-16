@@ -29,7 +29,7 @@ class TransposeConv3dUpsample(nn.Module):
         '''
         Upsample with interpolation
         Parameters:
-            scale_factor (float or Tuple[float]): factor by which to up scale the tensor
+            scale_factor (int): factor by which to up scale the tensor
             in_channels (int): number of channels in the input
         '''
         super(TransposeConv3dUpsample, self).__init__()
