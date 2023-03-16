@@ -70,6 +70,7 @@ def load_data(task_folder_path,
     │   ├── labelsTr
     │   │   ├── label_000.npy
     │   │   ├── ...
+    ├── dataset.json
     '''
     # check if the data has already been preprocessed
     if not os.path.exists(os.path.join(task_folder_path, 'preprocessed')):
