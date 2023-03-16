@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-class MaxPool3dDownscale(nn.Module):
+class Downscale(nn.Module):
     def __init__(self, downscale_factor):
         '''
         Downsample with maxpooling in 3d
@@ -8,7 +8,7 @@ class MaxPool3dDownscale(nn.Module):
             downscale_factor (int): factor by which to downscale the tensor
         '''
         super(MaxPool3dDownscale, self).__init__()
-        self.maxpool = nn.MaxPool3d(downscale_factor, stride=downscale_factor)
+        self.downscale_factor = downscale_factor
 
     def forward(self, x):
         '''
@@ -18,27 +18,27 @@ class MaxPool3dDownscale(nn.Module):
         Returns:
             x (torch.Tensor): (N, C, D/scale, H/scale, W/scale)
         '''
-        x = self.maxpool(x)
+        x = self.pool(x)
         return x
+
+
+class MaxPool3dDownscale(Downscale):
+    def __init__(self, downscale_factor):
+        '''
+        Downsample with maxpooling in 3d
+        Parameters:
+            downscale_factor (int): factor by which to downscale the tensor
+        '''
+        super(MaxPool3dDownscale, self).__init__(downscale_factor)
+        self.pool = nn.MaxPool3d(self.downscale_factor, stride=self.downscale_factor)
     
 
-class AvgPool3dDownscale(nn.Module):
+class AvgPool3dDownscale(Downscale):
     def __init__(self, downscale_factor):
         '''
         Downsample with average pooling in 3d
         Parameters:
             downscale_factor (int): factor by which to downscale the tensor
         '''
-        super(AvgPool3dDownscale, self).__init__()
-        self.avgpool = nn.AvgPool3d(downscale_factor, stride=downscale_factor)
-
-    def forward(self, x):
-        '''
-        Parameters:
-            x (torch.Tensor): (N, C, D, H, W)
-
-        Returns:
-            x (torch.Tensor): (N, C, D/scale, H/scale, W/scale)
-        '''
-        x = self.avgpool(x)
-        return x
+        super(AvgPool3dDownscale, self).__init__(downscale_factor)
+        self.pool = nn.AvgPool3d(self.downscale_factor, stride=self.downscale_factor)
