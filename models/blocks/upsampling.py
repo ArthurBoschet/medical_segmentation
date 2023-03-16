@@ -22,5 +22,32 @@ class InterpolateUpsample(nn.Module):
         '''
         x = F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode)
         return x
+    
+
+class TransposeConv3dUpsample(nn.Module):
+    def __init__(self, scale_factor, in_channels):
+        '''
+        Upsample with interpolation
+        Parameters:
+            scale_factor (float or Tuple[float]): factor by which to up scale the tensor
+            in_channels (int): number of channels in the input
+        '''
+        super(TransposeConv3dUpsample, self).__init__()
+        self.transpose_conv = nn.ConvTranspose3d(
+                                in_channels, 
+                                in_channels, 
+                                scale_factor, 
+                                stride=scale_factor, 
+                                padding=0, 
+                                dilation=1
+                                )
+
+    def forward(self, x):
+        '''
+        Parameters:
+            x (torch.Tensor): (N, C, D, H, W)
+        '''
+        x = self.transpose_conv(x)
+        return x
 
 
