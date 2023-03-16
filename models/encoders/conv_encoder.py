@@ -3,6 +3,7 @@ import torch.nn as nn
 #personal modules
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
 from blocks.downsampling import MaxPool3dDownscale, AvgPool3dDownscale
+from utils.conv_utils import conv3d_output_dim
 
 class ConvEncoder(nn.Module):
     def __init__(self,
@@ -32,11 +33,19 @@ class ConvEncoder(nn.Module):
 
         assert kernel_size % 2 == 1, "kernel size should be an odd number (standard practice)"
 
+        self.num_channels_list = num_channels_list
         self.num_blocks=len(num_channels_list)
 
         #make sure that shapes are compatible with architecture
         for i in range(1,4):
             assert input_shape[i] % downscale_factor**self.num_blocks == 0, "input shapes depth, height and width must be divisible by downscale_factor**num_blocks"
+
+        #input shape (C, D, H, W)
+        self.input_shape = input_shape
+
+        #conv parameters
+        self.kernel_size = kernel_size
+        self.padding = kernel_size//2  
 
         #function that instanciates each block
         self.block_instanciator = lambda in_channels, out_channels: block_type(
@@ -49,8 +58,6 @@ class ConvEncoder(nn.Module):
                                                             dropout=dropout,
                                                         )
         
-        #input shape (N, C, D, H, W)
-        self.input_shape = input_shape
             
         #instanciate the encoding conv_layers (conv_blocks + downscaling_layers)
         self.conv_blocks = nn.ModuleList()
@@ -82,5 +89,14 @@ class ConvEncoder(nn.Module):
                 x = self.downscaling_layers[i](x)
 
         return x, skip_connections
+    
+    def compute_output_dimensions(self):
+        #output dimension at each 
+        dimensions=[tuple([1] + list(self.input_shape))]
+
+        for c_out in self.num_channels_list:
+            dimensions.append(conv3d_output_dim(dimensions[-1][1], c_out, self.kernel_size, 1, self.padding, 1))
+
+        return dimensions
 
 
