@@ -1,0 +1,3 @@
+[submodule "preprocessing/nnUNet"]
+	path = preprocessing/nnUNet
+	url = https://github.com/clem2507/nnUNet.git
