@@ -18,6 +18,9 @@ class InterpolateUpsample(nn.Module):
         '''
         Parameters:
             x (torch.Tensor): (N, C, *) where * can be 1D,2D or 3D
+
+        Returns:
+            x (torch.Tensor): (N, C, D*scale, H*scale, W*scale)
         '''
         x = F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode)
         return x
@@ -26,7 +29,7 @@ class InterpolateUpsample(nn.Module):
 class TransposeConv3dUpsample(nn.Module):
     def __init__(self, scale_factor, in_channels):
         '''
-        Upsample with interpolation
+        Upsample with 3d transpose convolution
         Parameters:
             scale_factor (int): factor by which to up scale the tensor
             in_channels (int): number of channels in the input
@@ -45,6 +48,9 @@ class TransposeConv3dUpsample(nn.Module):
         '''
         Parameters:
             x (torch.Tensor): (N, C, D, H, W)
+
+        Returns:
+            x (torch.Tensor): (N, C, D*scale, H*scale, W*scale)
         '''
         x = self.transpose_conv(x)
         return x
