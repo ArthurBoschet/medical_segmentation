@@ -107,14 +107,14 @@ class ConvEncoder(nn.Module):
     
     def compute_output_dimensions(self):
         #output dimension at each 
-        dimensions=[tuple([1] + list(self.input_shape))]
-
+        dimensions=[]
+        dim = tuple([1] + list(self.input_shape))
         for i, c_out in enumerate(self.num_channels_list):
-            dim = conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1)
+            dim = conv3d_output_dim(dim, c_out, self.kernel_size, 1, self.padding, 1)
             dimensions.append(dim)
             if i < self.num_blocks - 1:
                 dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
 
-        return dimensions[1:]
+        return dimensions
 
 
