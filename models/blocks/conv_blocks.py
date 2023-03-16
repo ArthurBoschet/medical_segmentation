@@ -96,8 +96,7 @@ class Conv3DNormActivation(Conv3DActivation):
 
 class BaseConvBlock(nn.Module):
     def __init__(
-            self,
-            in_channels, 
+            self, 
             out_channels, 
             kernel_size, 
             stride=1, 
@@ -159,8 +158,7 @@ class DoubleConvBlock(BaseConvBlock):
             activation=nn.ReLU, 
             normalization=nn.BatchNorm3d,
             ):
-        super(DoubleConvBlock, self).__init__(
-            in_channels, 
+        super(DoubleConvBlock, self).__init__( 
             out_channels, 
             kernel_size, 
             stride=stride, 
@@ -187,6 +185,13 @@ class DoubleConvBlock(BaseConvBlock):
 
             
     def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) input size
+        '''
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
         return x
@@ -205,7 +210,6 @@ class ResConvBlock(BaseConvBlock):
             normalization=nn.BatchNorm3d,
             ):
         super(ResConvBlock, self).__init__(
-            in_channels, 
             out_channels, 
             kernel_size, 
             stride=stride, 
@@ -234,6 +238,13 @@ class ResConvBlock(BaseConvBlock):
 
             
     def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) input size
+        '''
         #first convolution
         x = self.conv_block_1(x)
 
