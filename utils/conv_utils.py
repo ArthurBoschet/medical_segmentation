@@ -32,7 +32,7 @@ def transpose_conv_output_dim(input_dim, kernel_size, stride, padding, dilation)
   Returns:
     output_dim (int): new dimension at the output of the convolution operation
   '''
-  output_dim = (input_dim-1)*stride-2*padding+dilation*(kernel_size-1)+1
+  output_dim = int((input_dim-1)*stride-2*padding+dilation*(kernel_size-1)+1)
   return output_dim
 
 
