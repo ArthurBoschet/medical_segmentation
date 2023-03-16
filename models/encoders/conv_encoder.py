@@ -106,6 +106,11 @@ class ConvEncoder(nn.Module):
         return x, skip_connections
     
     def compute_output_dimensions(self):
+        '''
+        computes the dimensions at the end of each convolutional block
+        Returns:
+            dimensions (List[Tuple]): dimension at the end of each convolutional block (first ones are skip connections while the last one is output of encoder)
+        '''
         #output dimension at each 
         dimensions=[]
         dim = tuple([1] + list(self.input_shape))
