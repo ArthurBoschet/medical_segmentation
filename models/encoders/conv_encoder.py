@@ -108,6 +108,6 @@ class ConvEncoder(nn.Module):
                 dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
             dimensions.append(dim)
 
-        return dimensions
+        return dimensions[1:]
 
 
