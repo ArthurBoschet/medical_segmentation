@@ -70,6 +70,9 @@ class ConvEncoder(nn.Module):
         c_in = input_shape[0]
         for i, c_out in enumerate(self.num_channels_list):
             self.conv_blocks.append(self.block_instanciator(c_in, c_out))
+
+            #number of input channels in the next block corresponds to output
+            c_in = c_out
             if i < self.num_blocks - 1:
                 self.downscaling_layers.append(downsampling(self.downscale_factor))
         
