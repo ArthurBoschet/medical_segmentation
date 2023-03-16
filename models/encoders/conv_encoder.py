@@ -48,6 +48,9 @@ class ConvEncoder(nn.Module):
         self.kernel_size = kernel_size
         self.padding = kernel_size//2  
 
+        #maxpooling parameters
+        self.downscale_factor = downscale_factor
+
         #function that instanciates each block
         self.block_instanciator = lambda in_channels, out_channels: block_type(
                                                             in_channels, 
@@ -65,10 +68,10 @@ class ConvEncoder(nn.Module):
         self.downscaling_layers = nn.ModuleList()
 
         c_in = input_shape[0]
-        for i, c_out in enumerate(num_channels_list):
+        for i, c_out in enumerate(self.num_channels_list):
             self.conv_blocks.append(self.block_instanciator(c_in, c_out))
             if i < self.num_blocks - 1:
-                self.downscaling_layers.append(downsampling(downscale_factor))
+                self.downscaling_layers.append(downsampling(self.downscale_factor))
         
         
 
@@ -96,7 +99,9 @@ class ConvEncoder(nn.Module):
         dimensions=[tuple([1] + list(self.input_shape))]
 
         for c_out in self.num_channels_list:
-            dimensions.append(conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1))
+            dim = conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1)
+            dim = conv3d_output_dim(dimensions[-1], c_out, self.kernel_size, 1, self.padding, 1)
+            dimensions.append()
 
         return dimensions
 
