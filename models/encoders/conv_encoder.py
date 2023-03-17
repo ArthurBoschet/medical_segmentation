@@ -38,11 +38,11 @@ class ConvEncoder(nn.Module):
         self.num_blocks=len(num_channels_list)
         self.input_shape = input_shape
 
-        #conv parameters
+        #conv parameters for same convolution
         self.kernel_size = kernel_size
         self.padding = kernel_size//2  
 
-        #maxpooling parameters
+        #downscaling parameters
         self.downscale_factor = downscale_factor
 
         #function that instanciates each block
