@@ -15,6 +15,7 @@ class ConvEncoder(nn.Module):
                  normalization=nn.BatchNorm3d,
                  block_type=DoubleConvBlock,
                  downsampling=MaxPool3dDownscale,
+                 downscale_last=False,
                  dropout=0,
                  ):
         '''
@@ -27,7 +28,8 @@ class ConvEncoder(nn.Module):
             activation (def None -> torch.nn.Module): non linear activation used by the block
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
             block_type (blocks.conv_blocks.BaseConvBlock): one the conv blocks inheriting from the BaseConvBlock class
-            downsampling (blocks.conv)
+            downsampling (blocks.conv.downsampling.Downscale): downsampling scheme
+            downscale_last (bool): whether or not to do downsampling on the final output
             dropout (float): dropout added to the layer
         '''
         super(ConvEncoder, self).__init__()
@@ -36,20 +38,15 @@ class ConvEncoder(nn.Module):
 
         self.num_channels_list = num_channels_list
         self.num_blocks=len(num_channels_list)
-
-        #make sure that shapes are compatible with architecture
-        for i in range(1,4):
-            assert input_shape[i] % downscale_factor**self.num_blocks == 0, "input shapes depth, height and width must be divisible by downscale_factor**num_blocks"
-
-        #input shape (C, D, H, W)
         self.input_shape = input_shape
 
-        #conv parameters
+        #conv parameters for same convolution
         self.kernel_size = kernel_size
         self.padding = kernel_size//2  
 
-        #maxpooling parameters
+        #downscaling parameters
         self.downscale_factor = downscale_factor
+        self.downscale_last = downscale_last
 
         #function that instanciates each block
         self.block_instanciator = lambda in_channels, out_channels: block_type(
@@ -73,7 +70,7 @@ class ConvEncoder(nn.Module):
 
             #number of input channels in the next block corresponds to output
             c_in = c_out
-            if i < self.num_blocks - 1:
+            if i < self.num_blocks - 1 or self.downscale_last:
                 self.downscaling_layers.append(downsampling(self.downscale_factor))
         
         
@@ -96,7 +93,7 @@ class ConvEncoder(nn.Module):
             x = self.conv_blocks[i](x)
 
             #downscale unless last conv block
-            if i < self.num_blocks - 1:
+            if i < self.num_blocks - 1 or self.downscale_last:
                 #save skip connection
                 skip_connections.append(x)
                 
@@ -117,8 +114,10 @@ class ConvEncoder(nn.Module):
         for i, c_out in enumerate(self.num_channels_list):
             dim = conv3d_output_dim(dim, c_out, self.kernel_size, 1, self.padding, 1)
             dimensions.append(dim)
-            if i < self.num_blocks - 1:
-                dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
+            dim = conv3d_output_dim(dim, c_out, self.downscale_factor, self.downscale_factor, 0, 1)
+
+        if self.downscale_last:
+            dimensions.append(dim)
 
         return dimensions
 

@@ -3,7 +3,7 @@ import torch.nn as nn
 class Downscale(nn.Module):
     def __init__(self, downscale_factor):
         '''
-        Downsample with maxpooling in 3d
+        Downsample in 3d
         Parameters:
             downscale_factor (int): factor by which to downscale the tensor
         '''
