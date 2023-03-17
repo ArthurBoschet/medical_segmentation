@@ -48,7 +48,7 @@ class ConvDecoder(nn.Module):
         #skip connections parameters
         self.skip_mode = skip_mode
         if self.skip_mode == 'add':
-            for shape, c in zip(self.encoder_shapes, self.num_channels_list):
+            for shape, c in zip(self.encoder_shapes[1:], self.num_channels_list):
                 assert shape[1] == c, f"the number of channels entered was {c} but {shape[1]} was expected based on encoder shapes in 'add' mode"
 
         #conv parameters for same convolution
@@ -78,21 +78,25 @@ class ConvDecoder(nn.Module):
         for c_out, skip_shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
 
             #we first do upscaling
-            upscale_block = upsampling(prev_shape, skip_shape, c_in)
-            
-            #upsampling added
-            self.upscaling_layers.append(upscale_block)
-
-            #if the skip mode is 'append' then the number of input channels in conv block doubles
-            if self.skip_mode == 'append':
-                c_in = 2*c_in
-
-            #conv block added
-            self.conv_blocks.append(self.block_instanciator(c_in, c_out))
+            upscale_block = upsampling(prev_shape, skip_shape, c_in, c_out)
 
             #update values
             c_in = c_out
             prev_shape = skip_shape
+            
+            #upsampling added
+            self.upscaling_layers.append(upscale_block)
+
+            #if the skip mode is 'append' 
+            if self.skip_mode == 'append':
+                c_in_conv = c_in + skip_shape[1]
+            elif self.skip_mode == 'add':
+                c_in_conv = c_in
+            else:
+                raise NotImplementedError(f"{self.skip_mode} is not implemented")
+
+            #conv block added
+            self.conv_blocks.append(self.block_instanciator(c_in_conv, c_out))
         
 
     def forward(self, x, skips):
@@ -104,7 +108,10 @@ class ConvDecoder(nn.Module):
         Returns:
         x (torch.Tensor): output
         '''
-        
+
+        #reverse the skips
+        skips = skips[::-1]
+
         #iterate over the number of blocks
         for i in range(self.num_blocks):
 
@@ -112,7 +119,7 @@ class ConvDecoder(nn.Module):
             x = self.upscaling_layers[i](x)
 
             #get skip connection
-            skip = skips.pop()
+            skip = skips[i]
 
             #add or append mode
             if self.skip_mode == 'append':
