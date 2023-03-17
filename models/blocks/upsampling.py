@@ -1,8 +1,11 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+class UpScale(nn.Module):
+    def __init__(self):
+        super(UpScale, self).__init__()
 
-class InterpolateUpsample(nn.Module):
+class InterpolateUpsample(UpScale):
     def __init__(self, scale_factor, mode="nearest"):
         '''
         Upsample with interpolation
@@ -26,7 +29,7 @@ class InterpolateUpsample(nn.Module):
         return x
     
 
-class TransposeConv3dUpsample(nn.Module):
+class TransposeConv3dUpsample(UpScale):
     def __init__(self, scale_factor, in_channels):
         '''
         Upsample with 3d transpose convolution
