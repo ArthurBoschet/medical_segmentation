@@ -135,8 +135,8 @@ class ConvDecoder(nn.Module):
         '''
         dimensions = []
         for channel, shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
-            dim = shape
+            dim = list(shape)
             dim[1] = channel
-            dimensions.append(dim)
+            dimensions.append(tuple(dim))
 
         return dimensions
