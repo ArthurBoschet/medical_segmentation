@@ -37,9 +37,9 @@ class ConvEncoder(nn.Module):
         self.num_channels_list = num_channels_list
         self.num_blocks=len(num_channels_list)
 
-        #make sure that shapes are compatible with architecture
-        for i in range(1,4):
-            assert input_shape[i] % downscale_factor**self.num_blocks == 0, "input shapes depth, height and width must be divisible by downscale_factor**num_blocks"
+        # #make sure that shapes are compatible with architecture
+        # for i in range(1,4):
+        #     assert input_shape[i] % downscale_factor**self.num_blocks == 0, "input shapes depth, height and width must be divisible by downscale_factor**num_blocks"
 
         #input shape (C, D, H, W)
         self.input_shape = input_shape
