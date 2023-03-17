@@ -27,7 +27,7 @@ class ConvEncoder(nn.Module):
             activation (def None -> torch.nn.Module): non linear activation used by the block
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
             block_type (blocks.conv_blocks.BaseConvBlock): one the conv blocks inheriting from the BaseConvBlock class
-            downsampling (blocks.conv)
+            downsampling (blocks.conv.downsampling.Downscale): downsampling scheme
             dropout (float): dropout added to the layer
         '''
         super(ConvEncoder, self).__init__()
@@ -36,12 +36,6 @@ class ConvEncoder(nn.Module):
 
         self.num_channels_list = num_channels_list
         self.num_blocks=len(num_channels_list)
-
-        # #make sure that shapes are compatible with architecture
-        # for i in range(1,4):
-        #     assert input_shape[i] % downscale_factor**self.num_blocks == 0, "input shapes depth, height and width must be divisible by downscale_factor**num_blocks"
-
-        #input shape (C, D, H, W)
         self.input_shape = input_shape
 
         #conv parameters
