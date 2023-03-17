@@ -3,13 +3,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class UpScale(nn.Module):
-    def __init__(self, current_shape, target_shape, in_channels):
+    def __init__(self, current_shape, target_shape, in_channels, out_channels):
         '''
         Upsample in 3d
         Parameters:
             current_shape (Tuple[int, int, int, int, int]): current shape of the tensor (N, C, D, H, W)
             target_shape (Tuple[int, int, int, int, int]): target shape of the tensor
             in_channels (int): number of channels in the input
+            out_channels (int): number of channels in the output
         '''
         super(UpScale, self).__init__()
 
@@ -19,6 +20,7 @@ class UpScale(nn.Module):
 
         #number of channels
         self.in_channels = in_channels
+        self.out_channels = out_channels
 
         #scaling factors
         self._scale_factor_calculate_float()
@@ -37,16 +39,17 @@ class UpScale(nn.Module):
         
 
 class InterpolateUpsample(UpScale):
-    def __init__(self, current_shape, target_shape, in_channels, mode="nearest"):
+    def __init__(self, current_shape, target_shape, in_channels, out_channels, mode="nearest"):
         '''
         Upsample with interpolation
         Parameters:
             current_shape (Tuple[int, int, int, int, int]): current shape of the tensor
             target_shape (Tuple[int, int, int, int, int]): target shape of the tensor
             in_channels (int): number of channels in the input
+            out_channels (int): number of channels in the output
             mode (str): algorithm used for upsampling: 'nearest' | 'linear' | 'bilinear' | 'bicubic' | 'trilinear' | 'area' | 'nearest-exact'. Default: 'nearest'
         '''
-        super(InterpolateUpsample, self).__init__(current_shape, target_shape, in_channels)
+        super(InterpolateUpsample, self).__init__(current_shape, target_shape, in_channels, out_channels)
         self.mode = mode
 
 
@@ -58,23 +61,24 @@ class InterpolateUpsample(UpScale):
         Returns:
             x (torch.Tensor): (N, C, D*scale, H*scale, W*scale)
         '''
-        x = F.interpolate(x, scale_factor=self.scale_factor_float, mode=self.mode)
+        x = F.interpolate(x, size=self.target_shape, mode=self.mode)
         return x
     
 
 class TransposeConv3dUpsample(UpScale):
-    def __init__(self, current_shape, target_shape, in_channels):
+    def __init__(self, current_shape, target_shape, in_channels, out_channels):
         '''
         Upsample with 3d transpose convolution
         Parameters:
             current_shape (Tuple[int, int, int, int, int]): current shape of the tensor
             target_shape (Tuple[int, int, int, int, int]): target shape of the tensor
             in_channels (int): number of channels in the input
+            out_channels (int): number of channels in the output
         '''
-        super(TransposeConv3dUpsample, self).__init__(current_shape, target_shape, in_channels)
+        super(TransposeConv3dUpsample, self).__init__(current_shape, target_shape, in_channels, out_channels)
         self.transpose_conv = nn.ConvTranspose3d(
                                 self.in_channels, 
-                                self.in_channels, 
+                                self.out_channels, 
                                 self.scale_factor_int, 
                                 stride=self.scale_factor_int, 
                                 padding=0, 
