@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -51,6 +52,7 @@ class InterpolateUpsample(UpScale):
         '''
         super(InterpolateUpsample, self).__init__(current_shape, target_shape, in_channels, out_channels)
         self.mode = mode
+        self.linear = torch.nn.Linear(self.in_channels, self.out_channels)
 
 
     def forward(self, x):
@@ -61,7 +63,13 @@ class InterpolateUpsample(UpScale):
         Returns:
             x (torch.Tensor): (N, C, D*scale, H*scale, W*scale)
         '''
-        x = F.interpolate(x, size=self.target_shape, mode=self.mode)
+        #linear interpolation
+        x = F.interpolate(x, size=tuple(self.target_shape), mode=self.mode)
+
+        #change the number of channels to appropriate size
+        x = torch.transpose(x, 1, 4)
+        x = self.linear(x)
+        x = torch.transpose(x, 1, 4)
         return x
     
 
