@@ -2,8 +2,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class UpScale(nn.Module):
-    def __init__(self):
+    def __init__(self, scale_factor):
+        '''
+        Upsample in 3d
+        Parameters:
+            scale_factor (int): factor by which to upsample the tensor
+        '''
         super(UpScale, self).__init__()
+        self.scale_factor = scale_factor
+        
 
 class InterpolateUpsample(UpScale):
     def __init__(self, scale_factor, mode="nearest"):
@@ -13,9 +20,8 @@ class InterpolateUpsample(UpScale):
             scale_factor (float or Tuple[float]): factor by which to up scale the tensor
             mode (str): algorithm used for upsampling: 'nearest' | 'linear' | 'bilinear' | 'bicubic' | 'trilinear' | 'area' | 'nearest-exact'. Default: 'nearest'
         '''
-        super(InterpolateUpsample, self).__init__()
+        super(InterpolateUpsample, self).__init__(scale_factor)
         self.mode = mode
-        self.scale_factor = scale_factor
 
     def forward(self, x):
         '''
@@ -37,11 +43,11 @@ class TransposeConv3dUpsample(UpScale):
             scale_factor (int): factor by which to up scale the tensor
             in_channels (int): number of channels in the input
         '''
-        super(TransposeConv3dUpsample, self).__init__()
+        super(TransposeConv3dUpsample, self).__init__(scale_factor)
         self.transpose_conv = nn.ConvTranspose3d(
                                 in_channels, 
                                 in_channels, 
-                                scale_factor, 
+                                self.scale_factor, 
                                 stride=scale_factor, 
                                 padding=0, 
                                 dilation=1
