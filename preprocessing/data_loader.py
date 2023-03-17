@@ -21,7 +21,7 @@ def load_data(task_folder_path,
 
     Args:
         task_folder_path: str
-            Path to the folder containing the data for the task
+            Path to the folder containing the data for the task (check )
         dataset_type: str
             Type of dataset to load (raw, cropped, preprocessed, preprocessed_pad)
         stage: str
@@ -39,8 +39,22 @@ def load_data(task_folder_path,
             DataLoader for the training set
         val_loader: DataLoader
             DataLoader for the validation set
+
+    The task_folder_path structure should correspond to:
+
+    task_folder_path
+    ├── imagesTr
+    │   ├── la_000.nii.gz
+    │   ├── ...
+    ├── labelsTr
+    │   ├── la_000.nii.gz
+    │   ├── ...
+    ├── imagesTs
+    │   ├── la_000.nii.gz
+    │   ├── ...
+    ├── dataset.json
     
-    Final folder structure:
+    Output folder structure will be:
 
     task_folder_path
     ├── raw
@@ -68,7 +82,7 @@ def load_data(task_folder_path,
     │   │   ├── labelsTr
     │   │   │   ├── label_000.npy
     │   │   │   ├── ...
-    │   ├── stage_1
+    │   ├── stage_1 (if apllicable)
     │   │   ├── imagesTr
     │   │   │   ├── image_000.npy
     │   │   │   ├── ...
@@ -85,6 +99,7 @@ def load_data(task_folder_path,
     │   │   │   ├── ...
     ├── dataset.json
     '''
+    # verify the input arguments
     assert dataset_type in ["raw", "cropped", "preprocessed", "preprocessed_pad"], "dataset_type must be one of raw, cropped, preprocessed, preprocessed_pad"
     assert stage in ["stage_0", "stage_1"], "stage must be one of stage_0, stage_1"
     # check if the data has already been preprocessed
@@ -133,20 +148,6 @@ def preprocess_data(task_folder_path):
     Args:
         task_folder_path: str 
             Path to the task folder
-
-    The folder structure should be:
-
-    task_folder_path
-    ├── imagesTr
-    │   ├── la_000.nii.gz
-    │   ├── ...
-    ├── labelsTr
-    │   ├── la_000.nii.gz
-    │   ├── ...
-    ├── imagesTs
-    │   ├── la_000.nii.gz
-    │   ├── ...
-    ├── dataset.json
     '''
     convert_decathlon_task(task_folder_path)
     preprocess_task(task_folder_path)
