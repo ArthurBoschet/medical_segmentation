@@ -18,10 +18,8 @@ def split_images_and_labels(input_folder):
     for file in tqdm(os.listdir(image_dir)):
         if file.endswith('.npz'):
             data = np.load(os.path.join(image_dir, file))['data']
-            image = data[0]
-            label = data[1]
-            np.save(os.path.join(image_dir, f'image_{file[3:6]}.npy'), image)
-            np.save(os.path.join(label_dir, f'label_{file[3:6]}.npy'), label)
+            np.save(os.path.join(image_dir, f'image_{file[-7:-4]}.npy'), data[0])
+            np.save(os.path.join(label_dir, f'label_{file[-7:-4]}.npy'), data[1])
             os.remove(os.path.join(image_dir, file))
 
 def convert_niigz_to_numpy(input_folder):
@@ -38,7 +36,7 @@ def convert_niigz_to_numpy(input_folder):
             if file.endswith('.nii.gz'):
                 data = nib.load(os.path.join(dir, file)).get_fdata()
                 data = np.transpose(data, (2, 0, 1))
-                np.save(os.path.join(dir, f'{type[:-3]}_{file[3:6]}.npy'), data)
+                np.save(os.path.join(dir, f'{type[:-3]}_{file[-10:-7]}.npy'), data)
                 os.remove(os.path.join(dir, file))
 
 def convert_to_numpy(input_folder):
@@ -74,7 +72,7 @@ def add_padding(input_folder):
                 max_width = data.shape[2]
     for type in ['imagesTr', 'labelsTr']:
         dir = os.path.join(input_folder, type)
-        out_dir = os.path.join(f'{input_folder}_pad', type)
+        out_dir = os.path.join(f'{input_folder[:-8]}_pad/{input_folder[-7:]}', type)
         os.makedirs(out_dir, exist_ok=True)
         for file in tqdm(os.listdir(dir)):
             if file.endswith('.npy'):
