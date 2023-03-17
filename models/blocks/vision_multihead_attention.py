@@ -52,14 +52,14 @@ class VisionMultiheadAttention(nn.Module):
     decoder_path = torch.flatten(decoder_path, start_dim=2, end_dim=- 1)
 
     #invert the length (height + width + depth) dimension with the channels
-    skip_path = torch.flip(skip_path, [1,2])
-    decoder_path = torch.flip(decoder_path, [1,2])
+    skip_path = torch.transpose(skip_path, 1,2)
+    decoder_path = torch.transpose(decoder_path, 1,2)
 
     #attention mechanism
     output, _ = self.multihead_attention_block(skip_path, decoder_path, decoder_path)
 
     #invert the length (height + width + depth) dimension with the channels
-    output = torch.flip(output, [1,2])
+    output = torch.transpose(output, 1,2)
 
     #reshape output
     output = torch.reshape(output, shape_skip)
