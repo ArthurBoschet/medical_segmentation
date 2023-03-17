@@ -171,7 +171,7 @@ class SingleConvBlock(BaseConvBlock):
             normalization=nn.BatchNorm3d,
             dropout=0
             ):
-        super(DoubleConvBlock, self).__init__( 
+        super(SingleConvBlock, self).__init__( 
             out_channels, 
             kernel_size, 
             stride=stride, 
