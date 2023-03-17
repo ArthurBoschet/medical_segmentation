@@ -18,8 +18,9 @@ def split_images_and_labels(input_folder):
     for file in tqdm(os.listdir(image_dir)):
         if file.endswith('.npz'):
             data = np.load(os.path.join(image_dir, file))['data']
-            np.save(os.path.join(image_dir, f'image_{file[-7:-4]}.npy'), data[0])
-            np.save(os.path.join(label_dir, f'label_{file[-7:-4]}.npy'), data[1])
+            idx = file.find('_')+1
+            np.save(os.path.join(image_dir, f'image_{file[idx:idx+3]}.npy'), data[0])
+            np.save(os.path.join(label_dir, f'label_{file[idx:idx+3]}.npy'), data[1])
             os.remove(os.path.join(image_dir, file))
 
 def convert_niigz_to_numpy(input_folder):
@@ -30,14 +31,16 @@ def convert_niigz_to_numpy(input_folder):
         input_folder: str
             Path to the folder containing the images and labels
     '''
-    for type in ['imagesTr', 'labelsTr', 'imagesTs']:
-        dir = os.path.join(input_folder, type)
-        for file in tqdm(os.listdir(dir)):
-            if file.endswith('.nii.gz'):
-                data = nib.load(os.path.join(dir, file)).get_fdata()
-                data = np.transpose(data, (2, 0, 1))
-                np.save(os.path.join(dir, f'{type[:-3]}_{file[-10:-7]}.npy'), data)
-                os.remove(os.path.join(dir, file))
+    for subdir in ['imagesTr', 'labelsTr', 'imagesTs']:
+        dir = os.path.join(input_folder, subdir)
+        if os.path.exists(dir):
+            for file in tqdm(os.listdir(dir)):
+                if file.endswith('.nii.gz'):
+                    data = nib.load(os.path.join(dir, file)).get_fdata()
+                    data = np.transpose(data, (2, 0, 1))
+                    idx = file.find('_')+1
+                    np.save(os.path.join(dir, f'{subdir[:-3]}_{file[idx:idx+3]}.npy'), data)
+                    os.remove(os.path.join(dir, file))
 
 def convert_to_numpy(input_folder):
     '''
@@ -55,30 +58,39 @@ def convert_to_numpy(input_folder):
     else:
         raise ValueError('Images format not recognized (should be .npz or .nii.gz)')
 
-def add_padding(input_folder):
+def check_for_padding(input_folder):
     '''
-    Add padding to the images and labels to make them all the same size
+    Check if the images and labels need to be padded
+    Add padding if necessary
 
     Args:
         input_folder: str 
             Path to the folder containing the images and labels
     '''
-    max_width = 0
-    dir = os.path.join(input_folder, 'imagesTr')
-    for file in tqdm(os.listdir(dir)):
-        if file.endswith('.npy'):
-            data = np.load(os.path.join(dir, file))
-            if data.shape[2] > max_width:
-                max_width = data.shape[2]
-    for type in ['imagesTr', 'labelsTr']:
-        dir = os.path.join(input_folder, type)
-        out_dir = os.path.join(f'{input_folder[:-8]}_pad/{input_folder[-7:]}', type)
-        os.makedirs(out_dir, exist_ok=True)
-        for file in tqdm(os.listdir(dir)):
-            if file.endswith('.npy'):
-                data = np.load(os.path.join(dir, file))
-                data = np.pad(data, ((0, 0), (0, 0), (0, max_width-data.shape[2])), 'constant')
-                np.save(os.path.join(out_dir, file), data)
+    for subdir in ['stage_0', 'stage_1']:
+        if os.path.exists(os.path.join(input_folder, subdir)):
+            max_width = 0
+            max_height = 0
+            padding_needed = False
+            for file in tqdm(os.listdir(os.path.join(input_folder, subdir, "imagesTr"))):
+                if file.endswith('.npy'):
+                    data = np.load(os.path.join(input_folder, subdir, "imagesTr", file))
+                    if data.shape[1] != data.shape[2]:
+                        padding_needed = True
+                    if data.shape[2] > max_width:
+                        max_width = data.shape[2]
+                    if data.shape[1] > max_height:
+                        max_height = data.shape[1]
+            if padding_needed:
+                for subsubdir in ['imagesTr', 'labelsTr']:
+                    dir = os.path.join(input_folder, subdir, subsubdir)
+                    out_dir = os.path.join(f'{input_folder}_pad', subdir, subsubdir)
+                    os.makedirs(out_dir, exist_ok=True)
+                    for file in tqdm(os.listdir(dir)):
+                        if file.endswith('.npy'):
+                            data = np.load(os.path.join(dir, file))
+                            data = np.pad(data, ((0, 0), (0, max_height-data.shape[1]), (0, max_width-data.shape[2])), 'constant')
+                            np.save(os.path.join(out_dir, file), data)
 
 def get_data(input_folder):
     '''
@@ -96,13 +108,13 @@ def get_data(input_folder):
     '''
     images = []
     labels = []
-    for type in ['imagesTr', 'labelsTr']:
-        dir = os.path.join(input_folder, type)
+    for subdir in ['imagesTr', 'labelsTr']:
+        dir = os.path.join(input_folder, subdir)
         for file in tqdm(sorted(os.listdir(dir))):
             if file.endswith('.npy'):
                 data = np.load(os.path.join(dir, file))
-                if type == 'imagesTr':
+                if subdir == 'imagesTr':
                     images.append(data)
-                elif type == 'labelsTr':
+                elif subdir == 'labelsTr':
                     labels.append(data)
     return images, labels
