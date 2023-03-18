@@ -89,7 +89,7 @@ class TransUNet(nn.Module):
         x = self.output_layer(x)
 
         #if visualization is set to true then return attention_weights
-        if visualize:
+        if not visualize:
             return x
         else:
             return x, attention_weights
