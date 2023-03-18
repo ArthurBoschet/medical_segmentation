@@ -10,6 +10,7 @@ class UNet(nn.Module):
     def __init__(
             self, 
             input_shape, 
+            num_classes,
             num_channels_list,
             kernel_size=3,
             scale_factor=2,
@@ -25,6 +26,7 @@ class UNet(nn.Module):
         Implementation of a UNet model
         Parameters:
             input_shape (tuple): (C,D,H,W) of the input
+            num_classes (int): number of classes in the segmentation
             num_channels_list (list): list of number of channels in each block
             kernel_size (int or tuple): size of the convolving kernel must be an odd number
             scale_factor (int): factor by which to downscale the image along depth, height and width and then rescale in decoder
@@ -38,6 +40,7 @@ class UNet(nn.Module):
         '''
         super(UNet, self).__init__()
         
+        #encoder
         self.encoder = ConvEncoder(
                                 input_shape,
                                 num_channels_list,
@@ -51,6 +54,7 @@ class UNet(nn.Module):
                                 dropout=dropout,
                             )
         
+        #decoder
         self.decoder = ConvDecoder(
                             self.encoder.compute_output_dimensions(),
                             num_channels_list[-2::-1],
@@ -63,10 +67,20 @@ class UNet(nn.Module):
                             dropout=dropout,
                         )
         
+        #ouput layer (channelwise mlp) to have the desired number of classes
+        self.output_layer = nn.Conv3d(
+                                num_channels_list[0], 
+                                num_classes, 
+                                1, 
+                                stride=1, 
+                                padding=0
+                            )
+        
     
     def forward(self, x):
         x, skip_connections = self.encoder(x)
         x = self.decoder(x, skip_connections)
+        x = self.output_layer(x)
         return x
 
         
