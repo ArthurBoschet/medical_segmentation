@@ -3,16 +3,16 @@ import torch.nn as nn
 from positional_encodings.torch_encodings import PositionalEncodingPermute3D
 
 class VisionMultiheadAttention(nn.Module):
-    def __init__(self, embed_size, num_skip_channels, num_decoder_channels, num_heads=1):
+    def __init__(self, num_skip_channels, num_decoder_channels, embed_size=64, num_heads=8):
         '''
         Multiheaded attention block that can be used to enhance nn-Unet. 
         The query is the skip connection while the key and value are come 
         from the decoder path.
 
         Parameters:
-            embed_size (int): Total dimension of the model
             num_skip_channels (int): number of channels in the skip connection
             num_decoder_channels (int): number of channels in the decoder path
+            embed_size (int): Total dimension of the model
             num_heads (int): number of attention heads
         '''
         super(VisionMultiheadAttention, self).__init__()
@@ -37,11 +37,12 @@ class VisionMultiheadAttention(nn.Module):
         self.multihead_attention_block = nn.MultiheadAttention(self.embed_size, self.num_heads, batch_first=True, kdim=self.num_decoder_channels, vdim=self.num_decoder_channels)
 
 
-    def forward(self, skip_path, decoder_path, visualize=True):
+    def forward(self, skip_path, decoder_path, visualize=False):
         '''
         Parameters:
             skip_path (torch.Tensor): shape is (batch_size, num_skip_channels, skip_depth, skip_height, skip_width)
             decoder_path (torch.Tensor): shape is (batch_size, num_decoder_channels, decoder_depth, decoder_height, decoder_width)
+            visualize (bool): whether or not to return attention weights in visualization format
 
         Returns:
             output (torch.Tensor): (batch_size, num_skip_channels, skip_depth, skip_height, skip_width)
