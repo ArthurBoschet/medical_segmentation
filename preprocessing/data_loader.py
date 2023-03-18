@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from nnUNet.nnunet.experiment_planning.nnUNet_convert_decathlon_task import main as convert_decathlon_task
 from nnUNet.nnunet.experiment_planning.nnUNet_plan_and_preprocess import main as preprocess_task
 from custom_dataset import MedicalImageDataset
-from utils import convert_to_numpy, check_for_padding, get_data
+from utils.data_utils import convert_to_numpy, check_for_padding, get_data
 
 
 def load_data(task_folder_path, 
