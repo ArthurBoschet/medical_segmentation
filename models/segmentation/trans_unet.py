@@ -83,8 +83,13 @@ class TransUNet(nn.Module):
                             )
         
     
-    def forward(self, x):
+    def forward(self, x, visualize=False):
         x, skip_connections = self.encoder(x)
-        x = self.decoder(x, skip_connections)
+        x, attention_weights = self.decoder(x, skip_connections, visualize=visualize)
         x = self.output_layer(x)
-        return x
+
+        #if visualization is set to true then return attention_weights
+        if visualize:
+            return x
+        else:
+            return x, attention_weights

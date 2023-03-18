@@ -82,6 +82,8 @@ class ConvTransDecoder(ConvDecoder):
         Returns:
         x (torch.Tensor): output
         '''
+        #attention weights
+        attention_weights = []
 
         #reverse the skips
         skips = skips[::-1]
@@ -94,6 +96,7 @@ class ConvTransDecoder(ConvDecoder):
 
             #attention mechanism on the skip connection
             skip, attention_weights_avg = self.attention_blocks[i](skip, x, visualize=visualize)
+            attention_weights.append(attention_weights_avg)
 
             #upscaling
             x = self.upscaling_layers[i](x)
@@ -109,4 +112,4 @@ class ConvTransDecoder(ConvDecoder):
             #go through convolutional block
             x = self.conv_blocks[i](x)
 
-        return x, attention_weights_avg
+        return x, attention_weights
