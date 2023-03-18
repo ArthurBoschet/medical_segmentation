@@ -108,13 +108,16 @@ def get_data(input_folder):
     '''
     images = []
     labels = []
-    for subdir in ['imagesTr', 'labelsTr']:
-        dir = os.path.join(input_folder, subdir)
-        for file in tqdm(sorted(os.listdir(dir))):
-            if file.endswith('.npy'):
-                data = np.load(os.path.join(dir, file))
-                if subdir == 'imagesTr':
-                    images.append(data)
-                elif subdir == 'labelsTr':
-                    labels.append(data)
+    if os.path.exists(os.path.join(input_folder)):
+        for subdir in ['imagesTr', 'labelsTr']:
+            dir = os.path.join(input_folder, subdir)
+            for file in tqdm(sorted(os.listdir(dir))):
+                if file.endswith('.npy'):
+                    data = np.load(os.path.join(dir, file))
+                    if subdir == 'imagesTr':
+                        images.append(data)
+                    elif subdir == 'labelsTr':
+                        labels.append(data)
+    else:
+        raise ValueError('Input folder does not exist')
     return images, labels
