@@ -1,14 +1,11 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 #personal modules
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
 from blocks.vision_multihead_attention import VisionMultiheadAttention
 from blocks.upsampling import InterpolateUpsample, TransposeConv3dUpsample
-from decoders.conv_trans_decoder import ConvDecoder
-from utils.conv_utils import conv3d_output_dim
-
+from decoders.conv_decoder import ConvDecoder
 
 class ConvTransDecoder(ConvDecoder):
     def __init__(self,
