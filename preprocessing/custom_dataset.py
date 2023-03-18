@@ -59,8 +59,8 @@ class MedicalImageDataset(Dataset):
 
         # resize tensors if necessary
         if self.resize is not None:
-            image = torch.nn.functional.interpolate(image, self.resize)
-            label = torch.nn.functional.interpolate(label, self.resize)
+            image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear", align_corners=True)
+            label = torch.nn.functional.interpolate(label, size=self.resize, mode="trilinear", align_corners=True)
 
         # remove batch dimension
         image = image.squeeze(0)
