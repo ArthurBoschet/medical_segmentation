@@ -36,7 +36,7 @@ class ConvTransDecoder(ConvDecoder):
             skip_mode (str): one of 'append' | 'add' refers to how the skip connection is added back to the decoder path
             dropout (float): dropout added to the layer
         '''
-        super(ConvDecoder, self).__init__(
+        super(ConvTransDecoder, self).__init__(
                                         encoder_shapes,
                                         num_channels_list,
                                         kernel_size=kernel_size,
