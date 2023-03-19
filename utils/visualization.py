@@ -73,8 +73,7 @@ def visualize_dataloaders(dataloader, figsize=(10,5)):
     '''
 
     @interact
-    def plot_slice(dataloader=dataloader, 
-                   image=(1, len(dataloader.dataset)), 
+    def plot_slice(image=(1, len(dataloader.dataset)), 
                    slice=(1, 130)):
         # get image and label
         im = dataloader.dataset[image][0][0].numpy()
