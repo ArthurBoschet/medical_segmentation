@@ -40,14 +40,12 @@ class MedicalImageDataset(Dataset):
             label: torch.Tensor
                 Tensor containing the label
             --> both tensors have shape (channels, depth, height, width)
+            idx: int
+                Index of the item
         '''
         # get image and label
         image = self.images[idx]
         label = self.labels[idx]
-
-        # assign an id to each image and label
-        image['id'] = idx
-        label['id'] = idx
 
         # convert to torch tensors
         image = torch.from_numpy(image)
@@ -78,4 +76,4 @@ class MedicalImageDataset(Dataset):
 
         # TODO: implement data augmentation
 
-        return image, label
+        return image, label, idx
