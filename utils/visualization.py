@@ -57,7 +57,7 @@ def visualize_attention(attention_weights_avg, figsize=(15,15), fraction=0.02, p
         #show plot
         plt.show()
 
-def visualize_dataloaders(dataloader, figsize=(10,5)):
+def visualize_dataloaders(dataloader, resize=None, figsize=(10,5)):
     '''
     shows a visualization of a slice of an image and its label from a dataloader
     
@@ -71,16 +71,15 @@ def visualize_dataloaders(dataloader, figsize=(10,5)):
         figsize: tuple
             size of the figure
     '''
-
     @interact
     def plot_slice(image=(1, len(dataloader.dataset)), 
-                   slice=(1, 130)):
+                   slice=(1, dataloader.dataset[0][0][0].numpy().shape[0])):
         # get image and label
         im = dataloader.dataset[image][0][0].numpy()
         label = dataloader.dataset[image][1][0].numpy()
         if slice > im.shape[0]-1:
             slice = im.shape[0]-1
-        print("shape:", im.shape)
+        print("image shape:", im.shape)
 
         # plot slice
         fig, ax = plt.subplots(1, 2, figsize=figsize)
@@ -89,5 +88,5 @@ def visualize_dataloaders(dataloader, figsize=(10,5)):
         ax[1].imshow(label[slice], cmap='gray')
         ax[1].set_title('label')
 
-        # show plot
-        plt.show(fig)
+        #show plot
+        plt.show()
