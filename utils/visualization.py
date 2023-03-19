@@ -90,4 +90,4 @@ def visualize_dataloaders(dataloader, figsize=(10,5)):
         ax[1].set_title('label')
 
         # show plot
-        plt.show()
+        plt.show(fig)
