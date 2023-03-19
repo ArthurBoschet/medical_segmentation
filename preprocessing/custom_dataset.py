@@ -59,12 +59,18 @@ class MedicalImageDataset(Dataset):
 
         # resize tensors if necessary
         if self.resize is not None:
-            image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear", align_corners=True)
-            label = torch.nn.functional.interpolate(label, size=self.resize, mode="trilinear", align_corners=True)
+            image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear")
+            label = torch.nn.functional.interpolate(label, size=self.resize, mode="trilinear")
 
         # remove batch dimension
         image = image.squeeze(0)
         label = label.squeeze(0)
+
+        # round label to 0 or 1
+        label = torch.round(label)
+
+        # replace -1 with 0
+        label[label == -1] = 0
 
         # TODO: implement data augmentation
 
