@@ -1,6 +1,6 @@
 import torch.nn as nn 
 
-from segmentation import SegmenationModel
+from segmentation.segmentation import SegmenationModel
 from encoders.conv_encoder import ConvEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
