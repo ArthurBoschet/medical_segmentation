@@ -1,9 +1,10 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
 #personal modules
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
-from blocks.vision_multihead_attention import VisionMultiheadAttention
+from blocks.attention_blocks import PatchifyVisionMultiheadAttention
 from blocks.upsampling import InterpolateUpsample, TransposeConv3dUpsample
 from decoders.conv_decoder import ConvDecoder
 
@@ -16,10 +17,15 @@ class ConvTransDecoder(ConvDecoder):
                  normalization=nn.BatchNorm3d,
                  block_type=DoubleConvBlock,
                  upsampling=TransposeConv3dUpsample,
+                 patch_size_factor=8,
                  embed_size=64, 
                  num_heads=8,
+                 activation_attention_embedding=nn.Identity,
+                 normalization_attention=nn.Identity,
+                 upscale_attention=TransposeConv3dUpsample,
                  skip_mode='append',
                  dropout=0,
+                 dropout_attention=0,
                  ):
         '''
         Convolutional decoder for UNet model. We assume that every convolution is a same convolution with no dilation.
@@ -31,10 +37,15 @@ class ConvTransDecoder(ConvDecoder):
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
             block_type (blocks.conv_blocks.BaseConvBlock): one the conv blocks inheriting from the BaseConvBlock class
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
+            patch_size_factor (int): amount by which the smallest dimension is divided
             embed_size (int): size of the attention layer
             num_heads (int): number of attention heads (dimension of each head is embed_size // num_heads)
+            activation_attention_embedding (def None -> torch.nn.Module): activation used by the embedding layer in the attention block
+            normalization_attention (def int -> torch.nn.modules.batchnorm._NormBase): normalization in embedding layer in the attention block
+            upscale_attention (blocks.conv.downsampling.Downscale): upsampling scheme for attention output
             skip_mode (str): one of 'append' | 'add' refers to how the skip connection is added back to the decoder path
             dropout (float): dropout added to the layer
+            dropout_attention (float): dropout added to the embedding layer in the attention block
         '''
         super(ConvTransDecoder, self).__init__(
                                         encoder_shapes,
@@ -51,23 +62,36 @@ class ConvTransDecoder(ConvDecoder):
         #instanciate the encoding conv_layers (conv_blocks + downscaling_layers)
         self.attention_blocks = nn.ModuleList()
         
-        vision_attention_maker = lambda num_skip_channels, num_decoder_channels: VisionMultiheadAttention(
-                                                                                    num_skip_channels, 
-                                                                                    num_decoder_channels, 
+        self.vision_attention_instanciator = lambda skip_dim, decoder_dim, patch_size: PatchifyVisionMultiheadAttention(
+                                                                                    skip_dim, 
+                                                                                    decoder_dim, 
+                                                                                    patch_size=patch_size, 
                                                                                     embed_size=embed_size, 
-                                                                                    num_heads=num_heads
+                                                                                    num_heads=num_heads,
+                                                                                    activation=activation_attention_embedding, 
+                                                                                    normalization=normalization_attention,
+                                                                                    upscale_attention=upscale_attention,
+                                                                                    dropout=dropout_attention,
                                                                                  )
+        
 
         #construction loop initialization
         prev_shape = self.encoder_shapes[0]
-        c_in = prev_shape[1]
 
         for c_out, skip_shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
-            self.attention_blocks.append(vision_attention_maker(skip_shape[1], c_in))
-            c_in = c_out
+        
+            #get the patch size
+            patch_size= min(skip_shape) // patch_size_factor
+
+            #attention block
+            self.attention_blocks.append(self.vision_attention_instanciator(skip_shape, prev_shape, patch_size))
+
+            #update values
+            prev_shape = np.array(skip_shape)
+            prev_shape[1] = c_out
+            prev_shape = tuple(prev_shape)
 
             
-        
 
     def forward(self, x, skips, visualize=False):
         '''
