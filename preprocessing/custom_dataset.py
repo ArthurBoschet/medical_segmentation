@@ -45,6 +45,8 @@ class MedicalImageDataset(Dataset):
         image = self.images[idx]
         label = self.labels[idx]
 
+        # get the image and label from files
+
         # convert to torch tensors
         image = torch.from_numpy(image)
         label = torch.from_numpy(label)
