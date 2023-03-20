@@ -1,12 +1,13 @@
 import torch.nn as nn 
 
+from segmentation.unet import UNet
 from encoders.conv_encoder import ConvEncoder
 from decoders.conv_trans_decoder import ConvTransDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
 from blocks.downsampling import MaxPool3dDownscale, AvgPool3dDownscale
 from blocks.upsampling import InterpolateUpsample, TransposeConv3dUpsample
 
-class TransUNet(nn.Module):
+class TransUNet(UNet):
     def __init__(
             self, 
             input_shape, 
@@ -52,21 +53,20 @@ class TransUNet(nn.Module):
             dropout (float): dropout added to the layer
             dropout_attention (float): dropout added to the embedding layer in the attention block
         '''
-        super(TransUNet, self).__init__()
-        
-        #encoder
-        self.encoder = ConvEncoder(
-                                input_shape,
-                                num_channels_list,
-                                kernel_size=kernel_size,
-                                downscale_factor=scale_factor,
-                                activation=activation, 
-                                normalization=normalization,
-                                block_type=block_type,
-                                downsampling=downsampling,
-                                downscale_last=False,
-                                dropout=dropout,
-                            )
+        super(TransUNet, self).__init__(
+            input_shape, 
+            num_classes,
+            num_channels_list,
+            kernel_size=kernel_size,
+            scale_factor=scale_factor,
+            activation=activation, 
+            normalization=normalization,
+            block_type=block_type,
+            downsampling=downsampling,
+            upsampling=upsampling,
+            skip_mode=skip_mode,
+            dropout=dropout,
+        )
         
         #decoder
         self.decoder = ConvTransDecoder(
@@ -87,15 +87,6 @@ class TransUNet(nn.Module):
                             dropout=dropout,
                             dropout_attention=dropout_attention,
                         )
-        
-        #ouput layer (channelwise mlp) to have the desired number of classes
-        self.output_layer = nn.Conv3d(
-                                num_channels_list[0], 
-                                num_classes, 
-                                1, 
-                                stride=1, 
-                                padding=0
-                            )
         
     
     def forward(self, x, visualize=False):
