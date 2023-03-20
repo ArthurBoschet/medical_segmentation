@@ -81,7 +81,7 @@ class ConvTransDecoder(ConvDecoder):
         for c_out, skip_shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
         
             #get the patch size
-            patch_size= min(skip_shape) // patch_size_factor
+            patch_size= min(list(skip_shape)[2:]) // patch_size_factor
 
             #attention block
             self.attention_blocks.append(self.vision_attention_instanciator(skip_shape, prev_shape, patch_size))
