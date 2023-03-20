@@ -19,6 +19,7 @@ class PatchifyVisionMultiheadAttention(nn.Module):
             upscale_attention=TransposeConv3dUpsample,
             dropout=0,
             ):
+        super(PatchifyVisionMultiheadAttention, self).__init__()
         '''
         Multiheaded attention block that can be used to enhance nn-Unet. 
         The query is the skip connection while the key and value are come 
@@ -60,10 +61,13 @@ class PatchifyVisionMultiheadAttention(nn.Module):
                                                 embed_size=embed_size, 
                                                 num_heads=num_heads
                                             )
+    
+        dimension_att = np.array(skip_dim)
+        dimension_att[2:] = dimension_att[2:] / np.array(patch_size)
 
         self.upscale_attention = upscale_attention(
-                                                tuple(np.array(skip_dim[2:]) // np.array(patch_size)), 
-                                                skip_dim[2:], 
+                                                tuple(dimension_att), 
+                                                skip_dim, 
                                                 embed_size, 
                                                 skip_dim[1]
                                             )
@@ -87,6 +91,9 @@ class PatchifyVisionMultiheadAttention(nn.Module):
             output (torch.Tensor): (batch_size, num_skip_channels, skip_depth, skip_height, skip_width)
             attention_weights_avg (torch.tensor): attention weigths with shape (N, D_skip, H_skip, W_skip, D_dec, H_dec, W_dec)
         '''
+        #save skip path
+        skip_connection = skip_path
+
         #embed the patches in skip path
         skip_path = self.patch_embed_skip(skip_path)
 
@@ -94,13 +101,13 @@ class PatchifyVisionMultiheadAttention(nn.Module):
         decoder_path = self.patch_embed_decoder(decoder_path)
 
         #multiheaded attention
-        output, attention_weights_avg = self.vision_attention(skip_path, decoder_path)
+        output, attention_weights_avg = self.vision_attention(skip_path, decoder_path, visualize)
 
         #upscale the attention output to original size
         output = self.upscale_attention(output)
 
         #add
-        output = output + skip_path
+        output = output + skip_connection
 
         #normalize
         output = self.normalization(output)
