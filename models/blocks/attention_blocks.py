@@ -94,7 +94,7 @@ class PatchifyVisionMultiheadAttention(nn.Module):
         decoder_path = self.patch_embed_decoder(decoder_path)
 
         #multiheaded attention
-        output = self.vision_attention(skip_path, decoder_path)
+        output, attention_weights_avg = self.vision_attention(skip_path, decoder_path)
 
         #upscale the attention output to original size
         output = self.upscale_attention(output)
@@ -105,7 +105,7 @@ class PatchifyVisionMultiheadAttention(nn.Module):
         #normalize
         output = self.normalization(output)
 
-        return output
+        return output, attention_weights_avg
 
 
 
