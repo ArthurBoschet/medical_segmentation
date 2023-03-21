@@ -1,7 +1,7 @@
 import os
 
 from torch.utils.data import DataLoader
-from custom_dataset import MedicalImageDataset
+from medical_dataset import MedicalImageDataset
 
 
 def load_data(data_folder_path,
