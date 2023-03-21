@@ -2,18 +2,14 @@ import os
 import shutil
 
 from torch.utils.data import DataLoader
-from sklearn.model_selection import train_test_split
 
 from nnUNet.nnunet.experiment_planning.nnUNet_convert_decathlon_task import main as convert_decathlon_task
 from nnUNet.nnunet.experiment_planning.nnUNet_plan_and_preprocess import main as preprocess_task
 from custom_dataset import MedicalImageDataset
-from utils.data_utils import convert_to_numpy, check_for_padding, get_data
+from utils.data_utils import convert_to_numpy, check_for_padding
 
 
-def load_data(task_folder_path, 
-              dataset_type="raw", 
-              stage="stage_0",
-              val_size=0.2, 
+def load_data(data_folder_path,
               batch_size=1, 
               shuffle=True,
               resize=None):
@@ -21,15 +17,8 @@ def load_data(task_folder_path,
     Load the data for the task into pytorch DataLoaders
 
     Args:
-        task_folder_path: str
-            Path to the folder containing the data for the task (check )
-        dataset_type: str
-            Type of dataset to load (raw, preprocessed, preprocessed_pad)
-        stage: str
-            Stage of preprocessing to load (stage_0, stage_1)
-            Only applicable if dataset_type is preprocessed or preprocessed_pad
-        val_size: float
-            Proportion of the data to use for validation
+        data_folder_path: str
+            Path to the folder containing the data preprocessed for the task (images and labels)
         batch_size: int
             Batch size for the DataLoader
         shuffle: bool
@@ -96,39 +85,9 @@ def load_data(task_folder_path,
     │   │   │   ├── ...
     ├── dataset.json
     '''
-    # verify the input arguments
-    assert dataset_type in ["raw", "preprocessed", "preprocessed_pad"], "dataset_type must be one of raw, preprocessed, preprocessed_pad"
-    assert stage in ["stage_0", "stage_1"], "stage must be one of stage_0, stage_1"
-    # check if the data has already been preprocessed
-    if not os.path.exists(os.path.join(task_folder_path, 'preprocessed')):
-        preprocess_data(task_folder_path)
-
-    # convert the images and labels into numpy arrays
-    if not os.listdir(os.path.join(task_folder_path, 'raw', 'imagesTr'))[0].endswith('.npy'):
-        convert_to_numpy(os.path.join(task_folder_path, 'raw'))
-    if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr')):
-        if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr'))[0].endswith('.npy'):
-            convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_0'))
-    if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr')):
-        if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr'))[0].endswith('.npy'):
-            convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_1'))
-
-    # add padding to the preprocessed folder if necessary
-    if not os.path.exists(os.path.join(task_folder_path, 'preprocessed_pad')):
-        check_for_padding(os.path.join(task_folder_path, 'preprocessed'))
-
-    # get the data from the given dataset_type
-    if dataset_type == "preprocessed" or dataset_type == "preprocessed_pad":
-        images, labels = get_data(os.path.join(task_folder_path, dataset_type, stage))
-    else:
-        images, labels = get_data(os.path.join(task_folder_path, dataset_type))
-
-    # split the data into training and validation sets
-    train_images, val_images, train_labels, val_labels = train_test_split(images, labels, test_size=val_size, random_state=42)
-    
     # create the pytorch dataset
-    train_dataset = MedicalImageDataset(train_images, train_labels, resize=resize)
-    val_dataset = MedicalImageDataset(val_images, val_labels, resize=resize)
+    train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train'), resize=resize)
+    val_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'val'), resize=resize)
 
     # create the pytorch dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
@@ -205,3 +164,17 @@ def preprocess_data(task_folder_path):
 
     # remove useless files
     os.remove(os.path.join(task_folder_path, 'raw', 'dataset.json'))
+
+    # convert the images and labels into numpy arrays
+    if not os.listdir(os.path.join(task_folder_path, 'raw', 'imagesTr'))[0].endswith('.npy'):
+        convert_to_numpy(os.path.join(task_folder_path, 'raw'))
+    if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr')):
+        if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr'))[0].endswith('.npy'):
+            convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_0'))
+    if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr')):
+        if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_1', 'imagesTr'))[0].endswith('.npy'):
+            convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_1'))
+
+    # add padding to the preprocessed folder if necessary
+    if not os.path.exists(os.path.join(task_folder_path, 'preprocessed_pad')):
+        check_for_padding(os.path.join(task_folder_path, 'preprocessed'))

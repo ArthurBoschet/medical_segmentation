@@ -91,33 +91,3 @@ def check_for_padding(input_folder):
                             data = np.load(os.path.join(dir, file))
                             data = np.pad(data, ((0, 0), (0, max_height-data.shape[1]), (0, max_width-data.shape[2])), 'constant')
                             np.save(os.path.join(out_dir, file), data)
-
-def get_data(input_folder):
-    '''
-    Get the images and labels from the input folder
-    
-    Args:
-        input_folder: str 
-            Path to the folder containing the images and labels
-
-    Returns:
-        images: list(numpy.ndarray)
-            List of numpy arrays containing the images
-        labels: list(numpy.ndarray)
-            List of numpy arrays containing the labels
-    '''
-    images = []
-    labels = []
-    if os.path.exists(os.path.join(input_folder)):
-        for subdir in ['imagesTr', 'labelsTr']:
-            dir = os.path.join(input_folder, subdir)
-            for file in tqdm(sorted(os.listdir(dir))):
-                if file.endswith('.npy'):
-                    data = np.load(os.path.join(dir, file))
-                    if subdir == 'imagesTr':
-                        images.append(data)
-                    elif subdir == 'labelsTr':
-                        labels.append(data)
-    else:
-        raise ValueError('Input folder does not exist')
-    return images, labels

@@ -1,30 +1,27 @@
+import os
 import torch
 import numpy as np
 
 from torch.utils.data import Dataset
-from torchvision import transforms
 
 
 class MedicalImageDataset(Dataset):
-    def __init__(self, images, labels, resize=None):
+    def __init__(self, path, resize=None):
         '''
         Initialize the custom dataset for segmentation of 3D medical images
         
         Args:
-            images: Iterable(numpy.ndarray)
-                Iterable of numpy arrays containing the images
-            labels: Iterable(numpy.ndarray)
-                Iterable of numpy arrays containing the labels
+            path: str
+                Path to the folder containing the data for the task
             resize: tuple(int, int, int)
                 Size to resize the images and labels to
                 Remember: (depth, height, width)
         '''
-        self.images = images
-        self.labels = labels
+        self.path = path
         self.resize = resize
 
     def __len__(self):
-        return len(self.images)
+        return len(os.listdir(self.path))
 
     def __getitem__(self, idx):
         '''
@@ -42,10 +39,8 @@ class MedicalImageDataset(Dataset):
             --> both tensors have shape (channels, depth, height, width)
         '''
         # get image and label
-        image = self.images[idx]
-        label = self.labels[idx]
-
-        # get the image and label from files
+        image = np.load(os.path.join(self.path, f"image_{str(idx).zfill(3)}.npy"))
+        label = np.load(os.path.join(self.path, f"label_{str(idx).zfill(3)}.npy"))
 
         # convert to torch tensors
         image = torch.from_numpy(image)
@@ -73,7 +68,5 @@ class MedicalImageDataset(Dataset):
 
         # replace -1 with 0
         label[label == -1] = 0
-
-        # TODO: implement data augmentation
 
         return image, label
