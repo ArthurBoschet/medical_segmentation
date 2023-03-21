@@ -72,14 +72,13 @@ def get_resize_shape(input_folder, factor=2):
     '''
     width_height_mean = 0
     depth_mean = 0
-    for subdir in ['imagesTr', 'labelsTr']:
-        dir = os.path.join(input_folder, subdir)
-        if os.path.isdir(dir):
-            for file in tqdm(os.listdir(dir)):
-                if file.endswith('.npy'):
-                    data = np.load(os.path.join(dir, file))
-                    width_height_mean += data.shape[1] + data.shape[2]
-                    depth_mean += data.shape[0]
+    dir = os.path.join(input_folder, "imagesTr")
+    if os.path.isdir(dir):
+        for file in tqdm(os.listdir(dir)):
+            if file.endswith('.npy'):
+                data = np.load(os.path.join(dir, file))
+                width_height_mean += data.shape[1] + data.shape[2]
+                depth_mean += data.shape[0]
     width_height_mean /= len(os.listdir(dir)) * 2
     depth_mean /= len(os.listdir(dir))
     width_height_mean/=factor
