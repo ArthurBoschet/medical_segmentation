@@ -21,7 +21,7 @@ class MedicalImageDataset(Dataset):
         self.resize = resize
 
     def __len__(self):
-        return len(os.listdir(self.path))
+        return len(os.listdir(self.path))//2
 
     def __getitem__(self, idx):
         '''

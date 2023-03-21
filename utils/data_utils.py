@@ -58,40 +58,6 @@ def convert_to_numpy(input_folder):
     else:
         raise ValueError('Images format not recognized (should be .npz or .nii.gz)')
 
-def check_for_padding(input_folder):
-    '''
-    Check if the images and labels need to be padded
-    Add padding if necessary
-
-    Args:
-        input_folder: str 
-            Path to the folder containing the images and labels
-    '''
-    for subdir in ['stage_0', 'stage_1']:
-        if os.path.exists(os.path.join(input_folder, subdir)):
-            max_width = 0
-            max_height = 0
-            padding_needed = False
-            for file in tqdm(os.listdir(os.path.join(input_folder, subdir, "imagesTr"))):
-                if file.endswith('.npy'):
-                    data = np.load(os.path.join(input_folder, subdir, "imagesTr", file))
-                    if data.shape[1] != data.shape[2]:
-                        padding_needed = True
-                    if data.shape[2] > max_width:
-                        max_width = data.shape[2]
-                    if data.shape[1] > max_height:
-                        max_height = data.shape[1]
-            if padding_needed:
-                for subsubdir in ['imagesTr', 'labelsTr']:
-                    dir = os.path.join(input_folder, subdir, subsubdir)
-                    out_dir = os.path.join(f'{input_folder}_pad', subdir, subsubdir)
-                    os.makedirs(out_dir, exist_ok=True)
-                    for file in tqdm(os.listdir(dir)):
-                        if file.endswith('.npy'):
-                            data = np.load(os.path.join(dir, file))
-                            data = np.pad(data, ((0, 0), (0, max_height-data.shape[1]), (0, max_width-data.shape[2])), 'constant')
-                            np.save(os.path.join(out_dir, file), data)
-
 def get_resize_shape(input_folder, factor=2):
     '''
     Get the shape to resize the images and labels from the dataset to
@@ -119,3 +85,44 @@ def get_resize_shape(input_folder, factor=2):
     width_height_mean = int(np.ceil(width_height_mean/factor)*factor)
     depth_mean = int(np.ceil(depth_mean/factor)*factor)
     return (depth_mean, width_height_mean, width_height_mean)
+
+
+def 
+
+if not os.path.exists(output_dataset_path):
+    # copy dataset from drive to virtual machine local drive
+    shutil.copytree(dataset_folder_path, output_dataset_path)
+
+    # split the data into training and validation sets
+    train_images_files, val_images_files, train_labels_files, val_labels_files = train_test_split(
+        os.listdir(os.path.join(output_dataset_path, "imagesTr")), 
+        os.listdir(os.path.join(output_dataset_path, "labelsTr")), 
+        test_size=val_size, 
+        random_state=42
+    )
+
+    # create train and val folders
+    os.makedirs(os.path.join(output_dataset_path, "train"))
+    os.makedirs(os.path.join(output_dataset_path, "val"))
+
+    # move validation images and labels to val folder
+    for val_im_file, val_label_file in zip(val_images_files, val_labels_files):
+        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", val_im_file), os.path.join(output_dataset_path, "val", val_im_file))
+        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", val_label_file), os.path.join(output_dataset_path, "val", val_label_file))
+    # move training images and labels to train folder
+    for tr_im_file, tr_label_file in zip(train_images_files, train_labels_files):
+        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(output_dataset_path, "train", tr_im_file))
+        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(output_dataset_path, "train", tr_label_file))
+
+    # renames train files
+    for i, (im_tr, la_tr) in enumerate(zip(sorted(train_images_files), sorted(train_labels_files))):
+        os.rename(os.path.join(output_dataset_path, "train", im_tr), os.path.join(output_dataset_path, "train", f"image_{str(i).zfill(3)}.npy"))
+        os.rename(os.path.join(output_dataset_path, "train", la_tr), os.path.join(output_dataset_path, "train", f"label_{str(i).zfill(3)}.npy"))
+    # renames val files
+    for i, (im_val, la_val) in enumerate(zip(sorted(val_images_files), sorted(val_labels_files))):
+        os.rename(os.path.join(output_dataset_path, "val", im_val), os.path.join(output_dataset_path, "val", f"image_{str(i).zfill(3)}.npy"))
+        os.rename(os.path.join(output_dataset_path, "val", la_val), os.path.join(output_dataset_path, "val", f"label_{str(i).zfill(3)}.npy"))
+
+    # remove useless folders
+    shutil.rmtree(os.path.join(output_dataset_path, "imagesTr"))
+    shutil.rmtree(os.path.join(output_dataset_path, "labelsTr"))
