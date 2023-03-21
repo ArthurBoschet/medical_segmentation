@@ -114,11 +114,11 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
     os.makedirs(os.path.join(output_dataset_path, "train"))
     os.makedirs(os.path.join(output_dataset_path, "val"))
 
-    # move validation images and labels to val folder
+    # copy validation images and labels to val folder
     for val_im_file, val_label_file in zip(val_images_files, val_labels_files):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", val_im_file), os.path.join(output_dataset_path, "val", val_im_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", val_label_file), os.path.join(output_dataset_path, "val", val_label_file))
-    # move training images and labels to train folder
+    # copy training images and labels to train folder
     for tr_im_file, tr_label_file in zip(train_images_files, train_labels_files):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(output_dataset_path, "train", tr_im_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(output_dataset_path, "train", tr_label_file))
