@@ -1,12 +1,7 @@
 import os
-import shutil
 
 from torch.utils.data import DataLoader
-
-from nnUNet.nnunet.experiment_planning.nnUNet_convert_decathlon_task import main as convert_decathlon_task
-from nnUNet.nnunet.experiment_planning.nnUNet_plan_and_preprocess import main as preprocess_task
 from custom_dataset import MedicalImageDataset
-from utils.data_utils import convert_to_numpy, check_for_padding
 
 
 def load_data(data_folder_path,
