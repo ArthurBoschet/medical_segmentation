@@ -114,5 +114,8 @@ def get_resize_shape(input_folder, factor=2):
                     depth_mean += data.shape[0]
     width_height_mean /= len(os.listdir(dir)) * 2
     depth_mean /= len(os.listdir(dir))
+    width_height_mean/=factor
+    depth_mean/=factor
     width_height_mean = int(np.ceil(width_height_mean/factor)*factor)
-    return (int(depth_mean/factor), int(width_height_mean/factor), int(width_height_mean/factor))
+    depth_mean = int(np.ceil(depth_mean/factor)*factor)
+    return (depth_mean, width_height_mean, width_height_mean)

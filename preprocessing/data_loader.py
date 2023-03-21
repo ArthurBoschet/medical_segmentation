@@ -28,9 +28,9 @@ def load_data(data_folder_path,
             Remember: (depth, height, width)
         
     Returns:
-        train_loader: DataLoader
+        train_dataloader: DataLoader
             DataLoader for the training set
-        val_loader: DataLoader
+        val_dataloader: DataLoader
             DataLoader for the validation set
 
     The task_folder_path structure should correspond to:
