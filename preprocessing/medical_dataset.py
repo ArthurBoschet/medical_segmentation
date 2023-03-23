@@ -59,6 +59,7 @@ class MedicalImageDataset(Dataset):
 
         # convert to torch tensors
         image = torch.from_numpy(image).float()
+        image.requires_grad_(True)
         label = torch.from_numpy(label)
 
         # add channel dimension
