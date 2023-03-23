@@ -58,7 +58,7 @@ def visualize_attention(attention_weights_avg, figsize=(15,15), fraction=0.02, p
         plt.show()
 
 
-def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize=(10, 5)):
+def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize=(8, 8)):
     '''
     shows a visualization of a slice of an image and its label from a dataloader
 
@@ -84,9 +84,9 @@ def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize
             slice = im.shape[0] - 1
 
         # plot slice
-        fig, ax = plt.subplots(1, 1)
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
         ax.imshow(im[slice], cmap="gray")
-        ax.imshow(label[slice], cmap=cmap, alpha=alpha)
+        ax.imshow(label[slice], cmap="jet", alpha=alpha)
         ax.set_title(f"Image and label")
 
         # show plot

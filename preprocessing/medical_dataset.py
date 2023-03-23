@@ -29,7 +29,7 @@ class MedicalImageDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(os.listdir(self.path))//2
+        return len([f for f in os.listdir(self.path) if f.startswith("image")])
 
     def __getitem__(self, idx):
         '''

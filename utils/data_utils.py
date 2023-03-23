@@ -77,7 +77,7 @@ def normalize_3d_array(array):
 
     # rescale the image to [0, 1]
     array_norm = (array_norm - np.min(array_norm)) / (np.max(array_norm) - np.min(array_norm))
-    
+
     return array_norm
 
 def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_size=0.2):
@@ -122,10 +122,14 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
 
     # renames train files
     for i, (im_tr, la_tr) in enumerate(zip(sorted(train_images_files), sorted(train_labels_files))):
+        print("im_tr: ", im_tr)
+        print("la_tr: ", la_tr)
         os.rename(os.path.join(output_dataset_path, "train", im_tr), os.path.join(output_dataset_path, "train", f"image_{str(i).zfill(3)}.npy"))
         os.rename(os.path.join(output_dataset_path, "train", la_tr), os.path.join(output_dataset_path, "train", f"label_{str(i).zfill(3)}.npy"))
     # renames val files
     for i, (im_val, la_val) in enumerate(zip(sorted(val_images_files), sorted(val_labels_files))):
+        print("im_val: ", im_val)
+        print("la_val: ", la_val)
         os.rename(os.path.join(output_dataset_path, "val", im_val), os.path.join(output_dataset_path, "val", f"image_{str(i).zfill(3)}.npy"))
         os.rename(os.path.join(output_dataset_path, "val", la_val), os.path.join(output_dataset_path, "val", f"label_{str(i).zfill(3)}.npy"))
     # renames test files
