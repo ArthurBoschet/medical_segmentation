@@ -70,7 +70,7 @@ class MedicalImageDataset(Dataset):
         label = label.unsqueeze(0)
 
         # adapt the number of channels in the label based on the number of classes from (N, 1, D, H, W) to (N, C, D, H, W)
-        label = torch.cat([label == i for i in range(self.num_classes)], dim=1).long()
+        label = torch.cat([label == i for i in range(self.num_classes)], dim=1).float()
 
         # resize tensors if necessary
         if self.resize is not None:
@@ -92,7 +92,7 @@ class MedicalImageDataset(Dataset):
             label = subject.label.data
 
         # round label to 0 or 1
-        label = torch.round(label)
+        label = torch.round(label).long()
 
         # replace -1 with 0 if any
         label[label == -1] = 0
