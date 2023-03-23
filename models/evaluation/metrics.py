@@ -99,7 +99,7 @@ class CrossEntropy(nn.Module):
 
         return self.criterion(pred,target)
 
-def iou_pytorch(pred_mask, target_mask):
+def iou_score(pred_mask, target_mask):
     assert pred_mask.shape == target_mask.shape, "Shape mismatch in input masks."
 
     # Make sure the input tensors are boolean
