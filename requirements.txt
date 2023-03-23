@@ -21,6 +21,7 @@ ipywidgets==8.0.4
 wandb==0.14.0
 torchmetrics==0.11.4
 torchio==0.18.90
+monai==1.1.0
 
 # nnUNet requirements
 -e preprocessing/nnUNet .
