@@ -1,6 +1,6 @@
 import os
 import torch
-import random
+import torchio as tio
 import numpy as np
 
 from torch.utils.data import Dataset
@@ -65,7 +65,13 @@ class MedicalImageDataset(Dataset):
 
         # apply transformations if necessary
         if self.transform is not None:
-            image, label = self.transform(image, label)
+            subject = tio.Subject(
+                image=tio.Image(tensor=image, type=tio.INTENSITY),
+                label=tio.LabelMap(tensor=label, type=tio.LABEL)
+            )
+            subject = self.transform(subject)
+            image = subject.image.data
+            label = subject.label.data
 
         # remove batch dimension
         image = image.squeeze(0)
