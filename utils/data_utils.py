@@ -70,22 +70,29 @@ def get_resize_shape(input_folder, factor=2):
         factor: int
             Factor to resize the images and labels by
     '''
-    width_height_mean = 0
+    width_mean = 0
+    height_mean = 0
     depth_mean = 0
-    dir = os.path.join(input_folder, "imagesTr")
-    if os.path.isdir(dir):
-        for file in tqdm(os.listdir(dir)):
-            if file.endswith('.npy'):
-                data = np.load(os.path.join(dir, file))
-                width_height_mean += data.shape[1] + data.shape[2]
-                depth_mean += data.shape[0]
-    width_height_mean /= len(os.listdir(dir)) * 2
-    depth_mean /= len(os.listdir(dir))
-    width_height_mean/=factor
-    depth_mean/=factor
-    width_height_mean = int(np.ceil(width_height_mean/factor)*factor)
-    depth_mean = int(np.ceil(depth_mean/factor)*factor)
-    return (depth_mean, width_height_mean, width_height_mean)
+    for subdir in ["train", "val"]:
+        dir = os.path.join(input_folder, subdir)
+        if os.path.isdir(dir):
+            for file in tqdm(os.listdir(dir)):
+                if file.endswith('.npy'):
+                    if file.startswith('image'):
+                        data = np.load(os.path.join(dir, file))
+                        depth_mean += data.shape[0]
+                        height_mean += data.shape[1]
+                        width_mean += data.shape[2]
+    depth_mean /= (len(os.listdir(os.path.join(input_folder, "train")))+len(os.listdir(input_folder, "val")))//2
+    height_mean /= (len(os.listdir(os.path.join(input_folder, "train")))+len(os.listdir(input_folder, "val")))//2
+    width_mean /= (len(os.listdir(os.path.join(input_folder, "train")))+len(os.listdir(input_folder, "val")))//2
+    depth_mean /= factor
+    height_mean /= factor
+    width_mean /= factor
+    depth_mean = int(np.ceil(depth_mean/factor) * factor)
+    height_mean = int(np.ceil(height_mean/factor) * factor)
+    width_mean = int(np.ceil(width_mean/factor) * factor)
+    return (depth_mean, height_mean, width_mean)
 
 def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_size=0.2):
     '''
@@ -99,7 +106,7 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
         val_size: float
             Size of the validation set
     '''
-    # copy dataset from drive to virtual machine local drive
+    # copy dataset from drive to virtual machine local disk
     shutil.copytree(dataset_folder_path, output_dataset_path)
 
     # split the data into training and validation sets
