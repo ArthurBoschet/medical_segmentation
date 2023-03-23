@@ -90,3 +90,39 @@ def visualize_dataloaders(dataloader, resize=None, figsize=(10,5)):
 
         #show plot
         plt.show()
+
+
+def visualize_dataloaders_overlap(dataloader,cmap='gray' , alpha = 0.3,figsize=(10, 5)):
+    '''
+    shows a visualization of a slice of an image and its label from a dataloader
+
+    Args:
+        dataloader: torch.utils.data.DataLoader
+            dataloader to visualize
+        cmap: str
+            str for the style of cmap of the label image
+        alpha: float
+            % of  oppacity for the label
+        figsize: tuple
+            size of the figure
+    '''
+
+    @interact
+    def plot_slice(image=(1, len(dataloader.dataset)),
+                   slice=(1, dataloader.dataset[0][0][0].numpy().shape[0]),
+                   ):
+        # get image and label
+        im = dataloader.dataset[image][0][0].numpy()
+        label = dataloader.dataset[image][1][0].numpy()
+        if slice > im.shape[0] - 1:
+            slice = im.shape[0] - 1
+        print("image shape:", im.shape)
+
+        # plot slice
+        figure(figsize=figsize, dpi=100)
+        plt.imshow(im[slice], cmap='gray')
+        plt.imshow(label[slice], cmap=cmap,alpha=alpha)
+        plt.title('Image and label')
+
+        # show plot
+        plt.show()
