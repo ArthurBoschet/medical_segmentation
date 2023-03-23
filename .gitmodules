@@ -1,3 +1,6 @@
 [submodule "preprocessing/nnUNet"]
 	path = preprocessing/nnUNet
 	url = https://github.com/clem2507/nnUNet.git
+[submodule "models/swin_unet"]
+	path = models/swin_unet
+	url = https://github.com/clem2507/swinUNet.git

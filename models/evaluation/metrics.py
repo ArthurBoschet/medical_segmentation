@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 
 
-class Loss_Custum(nn.Module):
+class Loss_Custom(nn.Module):
     def __init__(self,list_loss:nn.ModuleList,list_pond: list):
         '''
 
@@ -11,7 +11,7 @@ class Loss_Custum(nn.Module):
         list_loss : list of different loss to mesure
         list_pond : list of ponderations of different loss in list loss
         '''
-        super(Loss_Custum, self).__init__()
+        super(Loss_Custom, self).__init__()
         self.list_loss = list_loss
         self.list_pond = list_pond
 
@@ -99,4 +99,20 @@ class CrossEntropy(nn.Module):
 
         return self.criterion(pred,target)
 
+def iou_pytorch(pred_mask, target_mask):
+    assert pred_mask.shape == target_mask.shape, "Shape mismatch in input masks."
 
+    # Make sure the input tensors are boolean
+    pred_mask = pred_mask.bool()
+    target_mask = target_mask.bool()
+
+    # Calculate intersection
+    intersection = (pred_mask & target_mask).float().sum()
+
+    # Calculate union
+    union = (pred_mask | target_mask).float().sum()
+
+    # Calculate IoU
+    iou = intersection / (union + 1e-6)  # Adding a small epsilon to avoid division by zero
+
+    return iou
