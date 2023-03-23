@@ -63,6 +63,10 @@ class MedicalImageDataset(Dataset):
             image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear")
             label = torch.nn.functional.interpolate(label, size=self.resize, mode="trilinear")
 
+        # remove batch dimension
+        image = image.squeeze(0)
+        label = label.squeeze(0)
+
         # apply transformations if necessary
         if self.transform is not None:
             subject = tio.Subject(
@@ -73,9 +77,6 @@ class MedicalImageDataset(Dataset):
             image = subject.image.data
             label = subject.label.data
 
-        # remove batch dimension
-        image = image.squeeze(0)
-        label = label.squeeze(0)
 
         # round label to 0 or 1
         label = torch.round(label)
