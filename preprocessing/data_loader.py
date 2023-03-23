@@ -34,9 +34,11 @@ def load_data(data_folder_path,
     # create the pytorch dataset
     train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train'), resize=resize, transform=transform)
     val_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'val'), resize=resize, transform=transform)
+    test_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'test'), resize=resize, transform=transform)
 
     # create the pytorch dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
-    return train_dataloader, val_dataloader
+    return train_dataloader, val_dataloader, test_dataloader
