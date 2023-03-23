@@ -57,40 +57,6 @@ def visualize_attention(attention_weights_avg, figsize=(15,15), fraction=0.02, p
         #show plot
         plt.show()
 
-def visualize_dataloaders(dataloader, resize=None, figsize=(10,5)):
-    '''
-    shows a visualization of a slice of an image and its label from a dataloader
-    
-    Args:
-        dataloader: torch.utils.data.DataLoader
-            dataloader to visualize
-        image: int
-            index of the image to visualize
-        slice: int
-            index of the slice to visualize
-        figsize: tuple
-            size of the figure
-    '''
-    @interact
-    def plot_slice(image=(1, len(dataloader.dataset)), 
-                   slice=(1, dataloader.dataset[0][0][0].numpy().shape[0])):
-        # get image and label
-        im = dataloader.dataset[image][0][0].numpy()
-        label = dataloader.dataset[image][1][0].numpy()
-        if slice > im.shape[0]-1:
-            slice = im.shape[0]-1
-        print("image shape:", im.shape)
-
-        # plot slice
-        fig, ax = plt.subplots(1, 2, figsize=figsize)
-        ax[0].imshow(im[slice], cmap='gray')
-        ax[0].set_title('image')
-        ax[1].imshow(label[slice], cmap='gray')
-        ax[1].set_title('label')
-
-        #show plot
-        plt.show()
-
 
 def visualize_dataloaders_overlap(dataloader,cmap='gray' , alpha = 0.3,figsize=(10, 5)):
     '''
@@ -116,12 +82,13 @@ def visualize_dataloaders_overlap(dataloader,cmap='gray' , alpha = 0.3,figsize=(
         label = dataloader.dataset[image][1][0].numpy()
         if slice > im.shape[0] - 1:
             slice = im.shape[0] - 1
+        print("image shape:", im.shape)
 
         # plot slice
-        fig, ax = plt.subplots(1, 1)
-        ax.imshow(im[slice], cmap="gray")
-        ax.imshow(label[slice], cmap="jet", alpha=0.3)
-        ax.set_title(f"Slice {slice}")
+        plt.figure(figsize=figsize, dpi=100)
+        plt.imshow(im[slice], cmap='gray')
+        plt.imshow(label[slice], cmap=cmap, alpha=alpha)
+        plt.title('Image and label')
 
         # show plot
         plt.show()
