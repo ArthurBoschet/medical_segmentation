@@ -8,13 +8,15 @@ from utils.data_utils import normalize_3d_array
 
 
 class MedicalImageDataset(Dataset):
-    def __init__(self, path, normalize=False, resize=None, transform=None):
+    def __init__(self, path, num_classes=2, normalize=False, resize=None, transform=None):
         '''
         Initialize the custom dataset for segmentation of 3D medical images
         
         Args:
             path: str
                 Path to the folder containing the data for the task
+            num_classes: int
+                Number of classes in the dataset
             normalize: bool
                 Whether to normalize the images and labels between 0 and 1
             resize: tuple(int, int, int)
@@ -24,6 +26,7 @@ class MedicalImageDataset(Dataset):
                 Transformations to apply to the images and labels
         '''
         self.path = path
+        self.num_classes = num_classes
         self.normalize = normalize
         self.resize = resize
         self.transform = transform
@@ -65,6 +68,9 @@ class MedicalImageDataset(Dataset):
         # add batch dimension
         image = image.unsqueeze(0)
         label = label.unsqueeze(0)
+
+        # adapt the number of channels in the label based on the number of classes from (N, 1, D, H, W) to (N, C, D, H, W)
+        label = torch.cat([label == i for i in range(self.num_classes)], dim=1).long()
 
         # resize tensors if necessary
         if self.resize is not None:

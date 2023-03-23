@@ -6,6 +6,7 @@ from medical_dataset import MedicalImageDataset
 
 def load_data(data_folder_path,
               batch_size=1, 
+              num_classes=2,
               shuffle=True,
               normalize=False,
               resize=None,
@@ -18,6 +19,8 @@ def load_data(data_folder_path,
             Path to the folder containing the data preprocessed for the task (images and labels)
         batch_size: int
             Batch size for the DataLoader
+        num_classes: int
+            Number of classes in the dataset
         shuffle: bool
             Whether to shuffle the data in the DataLoader
         normalize: bool
@@ -35,9 +38,9 @@ def load_data(data_folder_path,
             DataLoader for the validation set
     '''
     # create the pytorch dataset
-    train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train'), normalize=normalize, resize=resize, transform=transform)
-    val_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'val'), normalize=normalize, resize=resize, transform=transform)
-    test_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'test'), normalize=normalize, resize=resize, transform=transform)
+    train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train'), num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
+    val_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'val'), num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
+    test_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'test'), num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
 
     # create the pytorch dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
