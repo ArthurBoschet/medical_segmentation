@@ -50,18 +50,26 @@ class MedicalImageDataset(Dataset):
         image = torch.from_numpy(image)
         label = torch.from_numpy(label)
 
+        print("image 1 shape: ", image.shape)
+
         # add channel dimension
         image = image.unsqueeze(0)
         label = label.unsqueeze(0)
+
+        print("image 2 shape: ", image.shape)
 
         # add batch dimension
         image = image.unsqueeze(0)
         label = label.unsqueeze(0)
 
+        print("image 3 shape: ", image.shape)
+
         # resize tensors if necessary
         if self.resize is not None:
             image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear")
             label = torch.nn.functional.interpolate(label, size=self.resize, mode="trilinear")
+
+        print("image 4 shape: ", image.shape)
 
         # apply transformations if necessary
         if self.transform is not None:
@@ -72,6 +80,8 @@ class MedicalImageDataset(Dataset):
             subject = self.transform(subject)
             image = subject.image.data
             label = subject.label.data
+
+        print("image 5 shape: ", image.shape)
 
         # round label to 0 or 1
         label = torch.round(label)
