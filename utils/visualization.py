@@ -116,13 +116,12 @@ def visualize_dataloaders_overlap(dataloader,cmap='gray' , alpha = 0.3,figsize=(
         label = dataloader.dataset[image][1][0].numpy()
         if slice > im.shape[0] - 1:
             slice = im.shape[0] - 1
-        print("image shape:", im.shape)
 
         # plot slice
-        figure(figsize=figsize, dpi=100)
-        plt.imshow(im[slice], cmap='gray')
-        plt.imshow(label[slice], cmap=cmap,alpha=alpha)
-        plt.title('Image and label')
+        fig, ax = plt.subplots(1, 1)
+        ax.imshow(im[slice], cmap="gray")
+        ax.imshow(label[slice], cmap="jet", alpha=0.3)
+        ax.set_title(f"Slice {slice}")
 
         # show plot
         plt.show()
