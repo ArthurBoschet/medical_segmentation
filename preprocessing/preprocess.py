@@ -42,6 +42,13 @@ def preprocess_data(task_folder_path):
     │   ├── imagesTs
     │   │   ├── image_000.npy
     │   │   ├── ...
+    ├── cropped
+    │   ├── imagesTr
+    │   │   ├── image_000.npy
+    │   │   ├── ...
+    │   ├── labelsTr
+    │   │   ├── label_000.npy
+    │   │   ├── ...
     ├── preprocessed
     │   ├── stage_0
     │   │   ├── imagesTr
@@ -72,6 +79,13 @@ def preprocess_data(task_folder_path):
 
     # raw
     shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'raw'), os.path.join(task_folder_path))
+
+    # cropped
+    os.makedirs(os.path.join(task_folder_path, 'cropped', 'imagesTr'))
+    os.makedirs(os.path.join(task_folder_path, 'cropped', 'labelsTr'))
+    for file in os.listdir(os.path.join(task_folder_path, 'preprocessed_data', 'cropped')):
+        if file.endswith('.npz'):
+            shutil.move(os.path.join(task_folder_path, 'preprocessed_data', 'cropped', file), os.path.join(task_folder_path, 'cropped', 'imagesTr', file))
     
     # preprocessed -- stage 0
     if os.path.exists(os.path.join(task_folder_path, 'preprocessed_data', 'final', 'nnUNetData_plans_v2.1_stage0')):
@@ -123,6 +137,8 @@ def preprocess_data(task_folder_path):
     # convert the images and labels into numpy arrays
     if not os.listdir(os.path.join(task_folder_path, 'raw', 'imagesTr'))[0].endswith('.npy'):
         convert_to_numpy(os.path.join(task_folder_path, 'raw'))
+    if not os.listdir(os.path.join(task_folder_path, 'cropped', 'imagesTr'))[0].endswith('.npy'):
+        convert_to_numpy(os.path.join(task_folder_path, 'cropped'))
     if os.path.exists(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr')):
         if not os.listdir(os.path.join(task_folder_path, 'preprocessed', 'stage_0', 'imagesTr'))[0].endswith('.npy'):
             convert_to_numpy(os.path.join(task_folder_path, 'preprocessed', 'stage_0'))

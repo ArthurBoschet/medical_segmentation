@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 
 
 class MedicalImageDataset(Dataset):
-    def __init__(self, path, resize=None):
+    def __init__(self, path, resize=None, transform=None):
         '''
         Initialize the custom dataset for segmentation of 3D medical images
         
@@ -17,9 +17,12 @@ class MedicalImageDataset(Dataset):
             resize: tuple(int, int, int)
                 Size to resize the images and labels to
                 Remember: (depth, height, width)
+            transform: torchvision.transforms
+                Transformations to apply to the images and labels
         '''
         self.path = path
         self.resize = resize
+        self.transform = transform
 
     def __len__(self):
         return len(os.listdir(self.path))//2
@@ -60,6 +63,10 @@ class MedicalImageDataset(Dataset):
             image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear")
             label = torch.nn.functional.interpolate(label, size=self.resize, mode="trilinear")
 
+        # apply transformations if necessary
+        if self.transform is not None:
+            image, label = self.transform(image, label)
+
         # remove batch dimension
         image = image.squeeze(0)
         label = label.squeeze(0)
@@ -67,7 +74,7 @@ class MedicalImageDataset(Dataset):
         # round label to 0 or 1
         label = torch.round(label)
 
-        # replace -1 with 0
+        # replace -1 with 0 if any
         label[label == -1] = 0
 
         return image, label
