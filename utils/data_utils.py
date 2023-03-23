@@ -59,6 +59,26 @@ def convert_to_numpy(input_folder):
         convert_niigz_to_numpy(input_folder)
     else:
         raise ValueError('Images format not recognized (should be .npz or .nii.gz)')
+    
+def normalize_3d_array(array):
+    '''
+    Normalize a 3D array
+    
+    Args:
+        array: np.ndarray
+            Array to normalize
+    
+    Returns:
+        array_norm: np.ndarray
+            Normalized array
+    '''
+    # normalize the image
+    array_norm = (array - array.mean()) / array.std()
+
+    # rescale the image to [0, 1]
+    array_norm = (array_norm - np.min(array_norm)) / (np.max(array_norm) - np.min(array_norm))
+    
+    return array_norm
 
 def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_size=0.2):
     '''

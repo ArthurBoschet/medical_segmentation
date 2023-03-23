@@ -4,16 +4,19 @@ import torchio as tio
 import numpy as np
 
 from torch.utils.data import Dataset
+from utils.data_utils import normalize_3d_array
 
 
 class MedicalImageDataset(Dataset):
-    def __init__(self, path, resize=None, transform=None):
+    def __init__(self, path, normalize=False, resize=None, transform=None):
         '''
         Initialize the custom dataset for segmentation of 3D medical images
         
         Args:
             path: str
                 Path to the folder containing the data for the task
+            normalize: bool
+                Whether to normalize the images and labels between 0 and 1
             resize: tuple(int, int, int)
                 Size to resize the images and labels to
                 Remember: (depth, height, width)
@@ -21,6 +24,7 @@ class MedicalImageDataset(Dataset):
                 Transformations to apply to the images and labels
         '''
         self.path = path
+        self.normalize = normalize
         self.resize = resize
         self.transform = transform
 
@@ -45,6 +49,10 @@ class MedicalImageDataset(Dataset):
         # get image and label
         image = np.load(os.path.join(self.path, f"image_{str(idx).zfill(3)}.npy"))
         label = np.load(os.path.join(self.path, f"label_{str(idx).zfill(3)}.npy"))
+
+        # apply normalization if necessary
+        if self.normalize:
+            image = normalize_3d_array(image)
 
         # convert to torch tensors
         image = torch.from_numpy(image)

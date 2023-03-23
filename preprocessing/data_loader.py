@@ -7,6 +7,7 @@ from medical_dataset import MedicalImageDataset
 def load_data(data_folder_path,
               batch_size=1, 
               shuffle=True,
+              normalize=False,
               resize=None,
               transform=None):
     '''
@@ -19,6 +20,8 @@ def load_data(data_folder_path,
             Batch size for the DataLoader
         shuffle: bool
             Whether to shuffle the data in the DataLoader
+        normalize: bool
+            Whether to normalize the images and labels between 0 and 1
         resize: tuple
             Size to resize the images and labels to
             Remember: (depth, height, width)
@@ -32,9 +35,9 @@ def load_data(data_folder_path,
             DataLoader for the validation set
     '''
     # create the pytorch dataset
-    train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train'), resize=resize, transform=transform)
-    val_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'val'), resize=resize, transform=transform)
-    test_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'test'), resize=resize, transform=transform)
+    train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train'), normalize=normalize, resize=resize, transform=transform)
+    val_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'val'), normalize=normalize, resize=resize, transform=transform)
+    test_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'test'), normalize=normalize, resize=resize, transform=transform)
 
     # create the pytorch dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)

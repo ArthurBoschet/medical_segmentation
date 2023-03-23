@@ -8,7 +8,7 @@ from utils.data_utils import convert_to_numpy
 
 def preprocess_data(task_folder_path):
     '''
-    Convert the data into the nnUNet format and preprocess it
+    Preprocessing pipeline of nnUNet
     Refactor the structure of the data folder
     
     Args:
