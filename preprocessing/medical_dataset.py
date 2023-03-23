@@ -58,7 +58,7 @@ class MedicalImageDataset(Dataset):
             image = normalize_3d_array(image)
 
         # convert to torch tensors
-        image = torch.from_numpy(image).float().requires_grad_(True)
+        image = torch.from_numpy(image).float()
         label = torch.from_numpy(label)
 
         # add channel dimension
