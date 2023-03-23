@@ -71,12 +71,11 @@ class MedicalImageDataset(Dataset):
         if self.transform is not None:
             subject = tio.Subject(
                 image=tio.Image(tensor=image, type=tio.INTENSITY),
-                label=tio.LabelMap(tensor=label, type=tio.LABEL)
+                label=tio.Image(tensor=label, type=tio.LABEL)
             )
             subject = self.transform(subject)
             image = subject.image.data
             label = subject.label.data
-
 
         # round label to 0 or 1
         label = torch.round(label)
