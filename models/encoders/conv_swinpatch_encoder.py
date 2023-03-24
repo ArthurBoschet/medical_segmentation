@@ -43,6 +43,7 @@ class ConvPatchEncoder(nn.Module):
         self.input_shape = input_shape
         # revisé
         output_emb = conv3d_output_dim(input_dim=input_shape,kernel_size=patch_size,stride=patch_size,padding=0,dilation=1)
+
         input_enc = (channel_embedding,output_emb[1],output_emb[2],output_emb[3])
 
         self.conv_encoder = ConvEncoder(input_shape=input_enc,
@@ -82,4 +83,7 @@ class ConvPatchEncoder(nn.Module):
         dim = self.input_shape.unsqueeze(0)
         dim_encodor = self.conv_encoder.compute_output_dimensions()
         return dim_encodor.insert(0,dim)
+
+
+
 
