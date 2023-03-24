@@ -40,11 +40,11 @@ class ConvPatchEncoder(nn.Module):
         '''
         super(ConvPatchEncoder, self).__init__()
         self.patch_embedding = torch.nn.Conv3d(input_shape[0],channel_embedding,kernel_size=patch_size,stride=patch_size)
-        self.input_shape = input_shape
+        self.input_shape = (1,input_shape[0],input_shape[1],input_shape[2],input_shape[3])
         # revisé
-        output_emb = conv3d_output_dim(input_dim=input_shape,kernel_size=patch_size,stride=patch_size,padding=0,dilation=1)
+        output_emb = conv3d_output_dim(input_dim=self.input_shape,num_kernels=channel_embedding,kernel_size=patch_size,stride=patch_size,padding=0,dilation=1)
 
-        input_enc = (channel_embedding,output_emb[1],output_emb[2],output_emb[3])
+        input_enc = (channel_embedding,output_emb[2],output_emb[3],output_emb[4])
 
         self.conv_encoder = ConvEncoder(input_shape=input_enc,
                                         num_channels_list=num_channels_list,
@@ -66,10 +66,10 @@ class ConvPatchEncoder(nn.Module):
             x (Tuple[torch.Tensor, List[torch.Tensor]]): output and list of skip connections
             skip_connections (list) : list of skip connections output
             '''
-            image = x
+            data = x
             x = self.patch_embedding(x)
             x, skip_connections = self.conv_encoder(x)
-            skip_connections.insert(0,image)
+            skip_connections.insert(0,data)
             return x , skip_connections
 
 
@@ -80,10 +80,8 @@ class ConvPatchEncoder(nn.Module):
             dimensions (List[Tuple]): dimension at the end of each convolutional block (first ones are skip connections while the last one is output of encoder)
         '''
 
-        dim = self.input_shape.unsqueeze(0)
+        dim = [self.input_shape]
         dim_encodor = self.conv_encoder.compute_output_dimensions()
-        return dim_encodor.insert(0,dim)
-
-
+        return dim +dim_encodor
 
 
