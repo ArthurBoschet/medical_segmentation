@@ -41,7 +41,7 @@ class ConvPatchEncoder(nn.Module):
         super(ConvPatchEncoder, self).__init__()
         self.patch_embedding = torch.nn.Conv3d(input_shape[0],channel_embedding,kernel_size=patch_size,stride=patch_size)
         self.input_shape = (1,input_shape[0],input_shape[1],input_shape[2],input_shape[3])
-        # revisé
+
         output_emb = conv3d_output_dim(input_dim=self.input_shape,num_kernels=channel_embedding,kernel_size=patch_size,stride=patch_size,padding=0,dilation=1)
 
         input_enc = (channel_embedding,output_emb[2],output_emb[3],output_emb[4])
