@@ -5,7 +5,7 @@ import torch
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
 from blocks.downsampling import MaxPool3dDownscale, AvgPool3dDownscale
 from utils.conv_utils import conv3d_output_dim
-from conv_encoder import ConvEncoder
+from encoders.conv_encoder import ConvEncoder
 
 class ConvPatchEncoder(nn.Module):
     def __init__(self,
