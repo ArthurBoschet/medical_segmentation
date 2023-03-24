@@ -14,6 +14,7 @@ class UNetPatch(SegmenationModel):
             input_shape,
             num_classes,
             num_channels_list,
+            channel_embedding,
             kernel_size=3,
             scale_factor=2,
             activation=nn.ReLU,
@@ -23,9 +24,8 @@ class UNetPatch(SegmenationModel):
             upsampling=TransposeConv3dUpsample,
             skip_mode='append',
             dropout=0,
-            patch_size=patch_size,
-            channel_embedding=channel_embedding
-    ):
+            patch_size=3,
+            ):
         '''
         Implementation of a UNet model
         Parameters:

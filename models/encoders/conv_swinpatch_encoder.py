@@ -11,6 +11,7 @@ class ConvPatchEncoder(nn.Module):
     def __init__(self,
                  input_shape,
                  num_channels_list,
+                 channel_embedding,
                  kernel_size=3,
                  downscale_factor=2,
                  activation=nn.ReLU,
@@ -20,7 +21,6 @@ class ConvPatchEncoder(nn.Module):
                  downscale_last=False,
                  dropout=0,
                  patch_size = 3,
-                 channel_embedding # à faire définir le channel embedding par default
                  ):
         '''
         Convolutional encoder for UNet model. We assume that every convolution is a same convolution with no dilation.
@@ -42,7 +42,7 @@ class ConvPatchEncoder(nn.Module):
         self.patch_embedding = torch.nn.Conv3d(input_shape[0],channel_embedding,kernel_size=patch_size,stride=patch_size)
         self.input_shape = input_shape
         # revisé
-        output_emb = conv3d_output_dim(input_dim=input_shape,kernel_size=patch_size,stride=patch_size,0,1)
+        output_emb = conv3d_output_dim(input_dim=input_shape,kernel_size=patch_size,stride=patch_size,padding=0,dilation=1)
         input_enc = (channel_embedding,output_emb[1],output_emb[2],output_emb[3])
 
         self.conv_encoder = ConvEncoder(input_shape=input_enc,
