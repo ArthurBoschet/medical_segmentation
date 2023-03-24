@@ -122,3 +122,23 @@ class ConvEncoder(nn.Module):
         return dimensions
 
 
+
+S = torch.randn((4,3, 15, 15, 30))
+input_shape = tuple(list(S.shape)[1:])
+num_classes = 2
+num_channels_list = [10, 20, 30, 40]
+skip_mode = 'append' #add is also supported
+embed_size=64
+num_heads=8
+dropout = 0.1
+
+test = ConvEncoder(input_shape,
+                 num_channels_list,
+                 kernel_size=3,
+                 downscale_factor=2,
+                 activation=nn.ReLU,
+                 normalization=nn.BatchNorm3d,
+                 block_type=DoubleConvBlock,
+                 downsampling=MaxPool3dDownscale,
+                 downscale_last=False,
+                 dropout=0,)
