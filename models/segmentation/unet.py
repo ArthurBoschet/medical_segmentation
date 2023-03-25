@@ -1,13 +1,13 @@
 import torch.nn as nn 
 
-from segmentation.segmentation import SegmenationModel
+from segmentation.segmentation import SegmentationModel
 from encoders.conv_encoder import ConvEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
 from blocks.downsampling import MaxPool3dDownscale, AvgPool3dDownscale
 from blocks.upsampling import InterpolateUpsample, TransposeConv3dUpsample
 
-class UNet(SegmenationModel):
+class UNet(SegmentationModel):
     def __init__(
             self, 
             input_shape, 

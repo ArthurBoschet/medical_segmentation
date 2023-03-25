@@ -1,12 +1,12 @@
 import torch.nn as nn
 import torch
 
-class SegmenationModel(nn.Module):
+class SegmentationModel(nn.Module):
     def __init__(self):
         '''
         base segmentation model
         '''
-        super(SegmenationModel, self).__init__()
+        super(SegmentationModel, self).__init__()
 
         #input is (N,C,D,H,W)
         self.predict_softmax = nn.Softmax(dim=1)

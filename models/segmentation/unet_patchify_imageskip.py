@@ -94,30 +94,3 @@ class UNetPatch(SegmentationModel):
         x = self.output_layer(x)
         return x
 
-
-import torch
-# init default parameters
-S = torch.randn((4,3, 120, 480, 480))
-input_shape = S.shape[1:]
-num_classes = 2
-num_channels_list = [10, 20, 30, 40]
-kernel_size = 3
-scale_factor = 2
-activation = nn.LeakyReLU
-normalization = nn.InstanceNorm3d
-block_type = DoubleConvBlock
-downsampling = MaxPool3dDownscale
-
-skip_mode = "append"
-dropout = 0.1
-
-
-
-# init model
-unet_model = UNetPatch(input_shape=input_shape,
-                       num_classes=num_classes,
-                  num_channels_list=num_channels_list,
-                channel_embedding= 50)
-z = unet_model(S)
-e = unet_model.compute_output_dimensions()
-print(e)
