@@ -14,7 +14,37 @@ def log_wandb_run(model,
                   patience=50, 
                   optimizer=None, 
                   criterion=None, 
+                  segmentation_ouput=False,
                   ):
+    ''' 
+    Train a U-Net model
+    
+    Args:
+        model: nn.Module 
+            U-Net model to train
+        batch_size: int
+            Batch size
+        num_classes: int
+            Number of classes
+        TODO: resize, dataset, shuffle
+        train_dataloader: torch.utils.data.DataLoader
+            Dataloader for training set
+        val_dataloader: torch.utils.data.DataLoader
+            Dataloader for validation set
+        num_epochs: int
+            Number of epochs to train the model
+        patience: int
+            Patience for early stopping
+        optimizer: torch.optim.Optimizer
+            Optimizer to use for training
+        scheduler: torch.optim.lr_scheduler
+            Learning rate scheduler
+        criterion: torch.nn.modules.loss._Loss
+            Loss function to use for training
+        segmentation_ouput: bool
+            Whether to log segmentation image results
+    '''
+
     # setup device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -56,6 +86,7 @@ def log_wandb_run(model,
           optimizer=optimizer, 
           criterion=criterion, 
           wandb_log=True,
+          segmentation_ouput=segmentation_ouput,
           )
     
     #terminate run
