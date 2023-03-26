@@ -331,4 +331,71 @@ class ResConvBlock(BaseConvBlock):
         #skip connection
         x = x + x_skip
         return x
+    
+
+
+class ResConvBlockUnetr(BaseConvBlock):
+    def __init__(
+            self,
+            in_channels, 
+            out_channels, 
+            kernel_size, 
+            stride=1, 
+            padding=0, 
+            dilation=1,  
+            activation=nn.ReLU, 
+            normalization=nn.BatchNorm3d,
+            dropout=0,
+            ):
+        super(ResConvBlockUnetr, self).__init__(
+            out_channels, 
+            kernel_size, 
+            stride=stride, 
+            padding=padding, 
+            dilation=dilation,  
+            activation=activation, 
+            normalization=normalization,
+            dropout=dropout
+        )
+        '''
+        Combines 2 basic convolutional blocks into one with a residual connection.
+        Inspired by https://arxiv.org/abs/2201.01266
+        Parameters:
+            in_channels (int): Number of channels in the input image
+            out_channels (int): Number of channels produced by the convolution
+            kernel_size (int or tuple): Size of the convolving kernel
+            stride (int or tuple, optional): Stride of the convolution. Default: 1
+            padding (int, tuple or str, optional): Padding added to all six sides of the input. Default: 0
+            dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
+            activation (def None -> torch.nn.Module): non linear activation used by the block
+            normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
+        '''
+            
+        self.conv_block_1 =  self.base_block(in_channels)
+        self.conv_block_2 =  self.base_block(out_channels)
+
+            
+    def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) output size
+        '''
+
+        #skip connection
+        x_skip = x
+
+        #second convolution
+        x = self.conv_block_1(x)
+
+        #third convolution
+        x = self.conv_block_2(x)
+
+        #skip connection
+        x = x + x_skip
+        
+        return x
 
