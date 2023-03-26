@@ -99,8 +99,8 @@ def load_data_kfold(data_folder_path,
             DataLoader for the validation set
     '''
     # create the pytorch dataset
-    train_dataset = KFoldMedicalImageDataset(os.path.join(data_folder_path, 'train'), k_folds=k_folds, fold=fold, train=True, num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
-    val_dataset = KFoldMedicalImageDataset(os.path.join(data_folder_path, 'val'), k_folds=k_folds, fold=fold, train=False, num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
+    train_dataset = KFoldMedicalImageDataset(os.path.join(data_folder_path, 'train_val'), k_folds=k_folds, fold=fold, train=True, num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
+    val_dataset = KFoldMedicalImageDataset(os.path.join(data_folder_path, 'train_val'), k_folds=k_folds, fold=fold, train=False, num_classes=num_classes, normalize=normalize, resize=resize, transform=transform)
 
     # create the pytorch dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)

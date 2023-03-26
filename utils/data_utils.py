@@ -107,15 +107,20 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
     os.makedirs(os.path.join(output_dataset_path, "train"))
     os.makedirs(os.path.join(output_dataset_path, "val"))
     os.makedirs(os.path.join(output_dataset_path, "test"))
+    os.makedirs(os.path.join(output_dataset_path, "train_val"))
 
-    # copy training images and labels to train folder
+    # copy training images and labels to train and train_val folders
     for tr_im_file, tr_label_file in zip(train_images_files, train_labels_files):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(output_dataset_path, "train", tr_im_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(output_dataset_path, "train", tr_label_file))
-    # copy validation images and labels to val folder
+        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(output_dataset_path, "train_val", tr_im_file))
+        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(output_dataset_path, "train_val", tr_label_file))
+    # copy validation images and labels to val and train_val folders
     for val_im_file, val_label_file in zip(val_images_files, val_labels_files):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", val_im_file), os.path.join(output_dataset_path, "val", val_im_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", val_label_file), os.path.join(output_dataset_path, "val", val_label_file))
+        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", val_im_file), os.path.join(output_dataset_path, "train_val", val_im_file))
+        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", val_label_file), os.path.join(output_dataset_path, "train_val", val_label_file))
     # copy test images to test folder
     for test_im_file in os.listdir(os.path.join(dataset_folder_path, "imagesTs")):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTs", test_im_file), os.path.join(output_dataset_path, "test", test_im_file))
@@ -131,6 +136,11 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
     # renames test files
     for i, test_im in enumerate(sorted(os.listdir(os.path.join(output_dataset_path, "test")))):
         os.rename(os.path.join(output_dataset_path, "test", test_im), os.path.join(output_dataset_path, "test", f"image_{str(i).zfill(3)}.npy"))
+    # renames train_val files
+    filenames = sorted(os.listdir(os.path.join(output_dataset_path, "train_val")))
+    for i, (im_tr_val, la_tr_val) in enumerate(zip(filenames[:len(filenames)//2], filenames[len(filenames)//2:])):
+        os.rename(os.path.join(output_dataset_path, "train_val", im_tr_val), os.path.join(output_dataset_path, "train_val", f"image_{str(i).zfill(3)}.npy"))
+        os.rename(os.path.join(output_dataset_path, "train_val", la_tr_val), os.path.join(output_dataset_path, "train_val", f"label_{str(i).zfill(3)}.npy"))
     
     # remove useless folders
     shutil.rmtree(os.path.join(output_dataset_path, "imagesTr"))
