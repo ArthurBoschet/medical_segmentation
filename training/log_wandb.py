@@ -3,10 +3,10 @@ import wandb
 from training.train import train
 
 def log_wandb_run(model, 
-                  batch_size,
-                  num_classes,
                   train_dataloader, 
-                  val_dataloader, 
+                  val_dataloader,
+                  batch_size,
+                  num_classes, 
                   num_epochs=50, 
                   patience=50, 
                   optimizer=None, 
@@ -19,14 +19,14 @@ def log_wandb_run(model,
     Args:
         model: nn.Module 
             U-Net model to train
-        batch_size: int
-            Batch size
-        num_classes: int
-            Number of classes
         train_dataloader: torch.utils.data.DataLoader
             Dataloader for training set
         val_dataloader: torch.utils.data.DataLoader
             Dataloader for validation set
+        batch_size: int
+            Batch size
+        num_classes: int
+            Number of classes
         num_epochs: int
             Number of epochs to train the model
         patience: int
@@ -55,10 +55,10 @@ def log_wandb_run(model,
 
     # data loader dictionary
     dataloader_dic = {
-        "batch_size": train_dataloader.batch_size,
+        "batch_size": batch_size,
+        "num_classes": num_classes,
         "input_size": train_dataloader.dataset.input_size,
         "dataset": train_dataloader.dataset.dataset_task,
-        "num_classes": train_dataloader.dataset.num_classes,
         "shuffle": train_dataloader.shuffle,
         "normalize": train_dataloader.dataset.normalize,
     }
