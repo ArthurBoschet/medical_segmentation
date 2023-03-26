@@ -5,9 +5,6 @@ from training.train import train
 def log_wandb_run(model, 
                   batch_size,
                   num_classes,
-                  resize,
-                  dataset,
-                  shuffle,
                   train_dataloader, 
                   val_dataloader, 
                   num_epochs=50, 
@@ -26,7 +23,6 @@ def log_wandb_run(model,
             Batch size
         num_classes: int
             Number of classes
-        TODO: resize, dataset, shuffle
         train_dataloader: torch.utils.data.DataLoader
             Dataloader for training set
         val_dataloader: torch.utils.data.DataLoader
@@ -60,9 +56,11 @@ def log_wandb_run(model,
     # data loader dictionary
     dataloader_dic = {
         "batch_size": train_dataloader.batch_size,
-        "input_size": resize,
-        "dataset": dataset,
-        "shuffle": shuffle,
+        "input_size": train_dataloader.dataset.input_size,
+        "dataset": train_dataloader.dataset.dataset_task,
+        "num_classes": train_dataloader.dataset.num_classes,
+        "shuffle": train_dataloader.shuffle,
+        "normalize": train_dataloader.dataset.normalize,
     }
 
     # initialize wandb

@@ -99,10 +99,11 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
     train_images_files, val_images_files, train_labels_files, val_labels_files = train_test_split(
         sorted(os.listdir(os.path.join(output_dataset_path, "imagesTr"))), 
         sorted(os.listdir(os.path.join(output_dataset_path, "labelsTr"))), 
-        test_size=val_size
+        test_size=val_size,
+        random_state=42
     )
 
-    # create train and val folders
+    # create train, val and test folders
     os.makedirs(os.path.join(output_dataset_path, "train"))
     os.makedirs(os.path.join(output_dataset_path, "val"))
     os.makedirs(os.path.join(output_dataset_path, "test"))
