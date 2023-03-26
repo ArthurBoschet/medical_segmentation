@@ -3,6 +3,7 @@ import torch
 import torchio as tio
 import numpy as np
 
+from sklearn.model_selection import KFold
 from torch.utils.data import Dataset
 from utils.data_utils import normalize_3d_array
 
@@ -98,3 +99,57 @@ class MedicalImageDataset(Dataset):
         label[label == -1] = 0
 
         return image, label
+
+
+class KFoldMedicalImageDataset(MedicalImageDataset):
+    def __init__(self, path, k_folds, fold, train=True, *args, **kwargs):
+        '''
+        Initialize the KFoldMedicalImageDataset for k-fold cross-validation
+        
+        Args:
+            path: str
+                Path to the folder containing the data for the task
+            k_folds: int
+                Number of folds for cross-validation
+            fold: int
+                Current fold (0-indexed) for cross-validation
+            train: bool
+                Whether to use the train or validation split
+            *args, **kwargs:
+                Additional arguments to pass to the MedicalImageDataset constructor
+        '''
+        super().__init__(path, *args, **kwargs)
+        self.k_folds = k_folds
+        self.fold = fold
+        self.train = train
+        
+        num_samples = len([f for f in os.listdir(self.path) if f.startswith("image")])
+        self.indices = list(range(num_samples))
+        self.kfold = KFold(n_splits=self.k_folds, shuffle=True, random_state=42)
+        self.train_indices, self.val_indices = list(self.kfold.split(self.indices))[self.fold]
+
+        if self.train:
+            self.current_indices = self.train_indices
+        else:
+            self.current_indices = self.val_indices
+
+    def __len__(self):
+        return len(self.current_indices)
+
+    def __getitem__(self, idx):
+        '''
+        Get the image and label at the given index
+        
+        Args:
+            idx: int
+                Index of the image and label to get
+                
+        Returns:
+            image: torch.Tensor
+                Tensor containing the image
+            label: torch.Tensor
+                Tensor containing the label
+            --> both tensors have shape (channels, depth, height, width)
+        '''
+        actual_idx = self.current_indices[idx]
+        return super().__getitem__(actual_idx)

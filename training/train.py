@@ -8,8 +8,6 @@ import wandb
 from models.evaluation.metrics import iou_score
 
 
-
-
 def train(model, 
           batch_size,
           num_classes,

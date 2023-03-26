@@ -2,6 +2,7 @@ import torch
 import wandb
 from training.train import train
 
+
 def log_wandb_run(model, 
                   train_dataloader, 
                   val_dataloader,
@@ -12,6 +13,7 @@ def log_wandb_run(model,
                   optimizer=None, 
                   criterion=None, 
                   segmentation_ouput=False,
+                  run_name=None,
                   ):
     ''' 
     Train a U-Net model
@@ -39,6 +41,8 @@ def log_wandb_run(model,
             Loss function to use for training
         segmentation_ouput: bool
             Whether to log segmentation image results
+        run_name: str
+            Name of the run to log to wandb
     '''
 
     # setup device
@@ -66,6 +70,7 @@ def log_wandb_run(model,
     # initialize wandb
     wandb.init(project="ift6759_project", 
                 entity="enzymes", 
+                name=run_name,
                 config={
                     "device": device,
                     "model": model_dic,
