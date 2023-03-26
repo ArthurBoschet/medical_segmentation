@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from segmentation.segmentation import SegmentationModel
+from segmentation import SegmentationModel
 from encoders.conv_swinpatch_encoder import ConvPatchEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
@@ -63,13 +63,13 @@ class UNetPatch(SegmentationModel):
             patch_size = patch_size,
             channel_embedding = channel_embedding
         )
-        #num_channels_list = num_channels_list + []
+        num_channels_list = num_channels_list + [input_shape[0]]
 
 
         # decoder
         self.decoder = ConvDecoder(
             self.encoder.compute_output_dimensions(),
-            num_channels_list[-1::-1],# -2 à -1
+            num_channels_list[-2::-1],# -2 à -1
             kernel_size=kernel_size,
             activation=activation,
             normalization=normalization,
