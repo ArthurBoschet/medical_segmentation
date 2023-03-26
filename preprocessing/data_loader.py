@@ -49,6 +49,13 @@ def load_data(data_folder_path,
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
+    # add custom keys
+    train_dataloader.dataset.input_size = resize
+    train_dataloader.dataset.dataset_task = data_folder_path.split('/')[-1]
+    train_dataloader.dataset.num_classes = num_classes
+    train_dataloader.dataset.shuffle = shuffle
+    train_dataloader.dataset.normalize = normalize
+
     return train_dataloader, val_dataloader, test_dataloader
 
 
@@ -98,5 +105,12 @@ def load_data_kfold(data_folder_path,
     # create the pytorch dataloader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+    # add custom keys
+    train_dataloader.dataset.input_size = resize
+    train_dataloader.dataset.dataset_task = data_folder_path.split('/')[-1]
+    train_dataloader.dataset.num_classes = num_classes
+    train_dataloader.dataset.shuffle = shuffle
+    train_dataloader.dataset.normalize = normalize
 
     return train_dataloader, val_dataloader
