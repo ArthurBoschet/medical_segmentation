@@ -12,6 +12,7 @@ def log_wandb_run(model,
                   patience=50, 
                   optimizer=None, 
                   criterion=None, 
+                  scheduler=None,
                   segmentation_ouput=False,
                   run_name=None,
                   ):
@@ -35,10 +36,10 @@ def log_wandb_run(model,
             Patience for early stopping
         optimizer: torch.optim.Optimizer
             Optimizer to use for training
-        scheduler: torch.optim.lr_scheduler
-            Learning rate scheduler
         criterion: torch.nn.modules.loss._Loss
             Loss function to use for training
+        scheduler: torch.optim.lr_scheduler
+            Learning rate scheduler
         segmentation_ouput: bool
             Whether to log segmentation image results
         run_name: str
@@ -88,6 +89,7 @@ def log_wandb_run(model,
           patience=patience, 
           optimizer=optimizer, 
           criterion=criterion, 
+          scheduler=scheduler,
           wandb_log=True,
           segmentation_ouput=segmentation_ouput,
           )
