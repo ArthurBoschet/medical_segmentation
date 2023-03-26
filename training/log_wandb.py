@@ -63,7 +63,7 @@ def log_wandb_run(model,
         "num_classes": num_classes,
         "input_size": train_dataloader.dataset.input_size,
         "dataset": train_dataloader.dataset.dataset_task,
-        "shuffle": train_dataloader.shuffle,
+        "shuffle": train_dataloader.dataset.shuffle,
         "normalize": train_dataloader.dataset.normalize,
     }
 
