@@ -127,7 +127,7 @@ class MedicalImageDataset(Dataset):
 
 
 class KFoldMedicalImageDataset(MedicalImageDataset):
-    def __init__(self, path, k_folds, fold, train=True, normalize=True, resize=None, transform=None):
+    def __init__(self, path, k_folds, fold, num_classes=2, train=True, normalize=True, resize=None, transform=None):
         '''
         Initialize the KFoldMedicalImageDataset for k-fold cross-validation
         
@@ -146,6 +146,7 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
         self.path = path
         self.k_folds = k_folds
         self.fold = fold
+        self.num_classes = num_classes
         self.train = train
         self.normalize = normalize
         self.resize = resize
