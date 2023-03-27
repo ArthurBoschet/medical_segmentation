@@ -229,13 +229,7 @@ def train(model,
             best_val_loss = val_loss
             torch.save(model.state_dict(), "best_model.pt")
             if wandb_log:
-                artifact = wandb.Artifact(
-                    f"model-epoch-{epoch}", 
-                    type="model", 
-                    description=f"Model after epoch {epoch}"
-                )
-                artifact.add_file("best_model.pt")
-                wandb.log_artifact(artifact)
+                wandb.save("best_model.pt")
         else:
             patience_count+=1
 
@@ -261,3 +255,10 @@ def train(model,
     if wandb_log:
         val_dice_max = {f"max_val_dice_{i}":max(val_dice_list[i]) for i in range(num_classes)}
         wandb.log(val_dice_max)
+        artifact = wandb.Artifact(
+            f"model-{wandb.run.id}", 
+            type="model", 
+            description=f"Model after epoch {num_epochs}"
+        )
+        artifact.add_file("best_model.pt")
+        wandb.log_artifact(artifact)
