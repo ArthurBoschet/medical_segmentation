@@ -35,9 +35,13 @@ class MedicalImageDataset(Dataset):
         self.resize = resize
         self.transform = transform
 
+        filenames = sorted(os.listdir(path))
+        images_filenames = filenames[:len(filenames)//2]
+        labels_filenames = filenames[len(filenames)//2:]
+
         train_images_files, val_images_files, train_labels_files, val_labels_files = train_test_split(
-            sorted(os.listdir(path)), 
-            sorted(os.listdir(path)), 
+            images_filenames, 
+            labels_filenames, 
             test_size=0.2,
             random_state=42
         )
@@ -145,8 +149,8 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
         self.train = train
 
         filenames = sorted(os.listdir(path))
-        self.images_files = filenames[:len(filenames)//2]
-        self.labels_files = filenames[len(filenames)//2:]
+        images_filenames = filenames[:len(filenames)//2]
+        labels_filenames = filenames[len(filenames)//2:]
         
         num_samples = len([f for f in os.listdir(self.path) if f.startswith("image")])
         self.indices = list(range(num_samples))
@@ -155,11 +159,11 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
         self.train_indices, self.val_indices = list(self.kfold.split(self.indices))[self.fold]
 
         if self.train:
-            self.images_files = [self.images_files[i] for i in self.train_indices]
-            self.labels_files = [self.labels_files[i] for i in self.train_indices]
+            self.images_files = [images_filenames[i] for i in self.train_indices]
+            self.labels_files = [labels_filenames[i] for i in self.train_indices]
         else:
-            self.images_files = [self.images_files[i] for i in self.val_indices]
-            self.labels_files = [self.labels_files[i] for i in self.val_indices]
+            self.images_files = [images_filenames[i] for i in self.val_indices]
+            self.labels_files = [labels_filenames[i] for i in self.val_indices]
 
     def __len__(self):
         super().__len__()
