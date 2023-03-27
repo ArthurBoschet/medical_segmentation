@@ -206,7 +206,7 @@ def train(model,
         # log to wandb
         if wandb_log:
             wandb_dict = {
-                "epoch": epoch,
+                "epoch": (epoch+1),
                 "train_loss": train_loss,
                 "train_f1_macro": train_f1_macro, 
                 "val_loss": val_loss,
