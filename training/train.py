@@ -23,11 +23,11 @@ def train(model,
           segmentation_ouput=False,
           ):
     ''' 
-    Train a U-Net model
+    Train a model
     
     Args:
         model: nn.Module 
-            U-Net model to train
+            Model to train
         batch_size: int
             Batch size
         num_classes: int
@@ -67,6 +67,7 @@ def train(model,
 
     # initialize best validation loss
     best_val_loss = np.inf
+    best_epoch = 0
 
     # initialize lists to store loss and dice scores
     train_loss_list = []
@@ -227,6 +228,7 @@ def train(model,
         if val_loss < best_val_loss:
             patience_count = 0
             best_val_loss = val_loss
+            best_epoch = epoch
             torch.save(model.state_dict(), "best_model.pt")
             if wandb_log:
                 wandb.save("best_model.pt")
@@ -256,9 +258,9 @@ def train(model,
         val_dice_max = {f"max_val_dice_{i}":max(val_dice_list[i]) for i in range(num_classes)}
         wandb.log(val_dice_max)
         artifact = wandb.Artifact(
-            f"model-{wandb.run.id}", 
+            model.__class__.__name__, 
             type="model", 
-            description=f"Model after epoch {num_epochs}"
+            description=f"Model after epoch {best_epoch}"
         )
         artifact.add_file("best_model.pt")
         wandb.log_artifact(artifact)
