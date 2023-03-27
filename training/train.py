@@ -227,9 +227,15 @@ def train(model,
         if val_loss < best_val_loss:
             patience_count = 0
             best_val_loss = val_loss
-            torch.save(model.state_dict(), 'best_model.pt')
+            torch.save(model.state_dict(), "best_model.pt")
             if wandb_log:
-                wandb.save('best_model.pt')
+                artifact = wandb.Artifact(
+                    f"model-epoch-{epoch}", 
+                    type="model", 
+                    description=f"Model after epoch {epoch}"
+                )
+                artifact.add_file("best_model.pt")
+                wandb.log_artifact(artifact)
         else:
             patience_count+=1
 
