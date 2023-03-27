@@ -129,3 +129,33 @@ def save_nifti(image, affine, filename):
     '''
     img = nib.Nifti1Image(image, affine)
     nib.save(img, filename)
+
+
+def reconstruct_affine_matrix(header_file_path):
+    '''
+    Reconstruct the affine matrix from the header of a nifti file.
+
+    Args:
+        header_file_path (str):
+            Path to the nifti file
+
+    Returns:
+        affine (np.array):
+            Affine matrix
+    '''
+    # load the header
+    header = nib.load(header_file_path).header
+
+    # voxel spacing
+    dx, dy, dz = header.get_zooms()
+
+    # origin of the image coordinate system
+    x0, y0, z0 = header.get_qform()[:3, 3]
+
+    # reconstruction of the affine matrix
+    affine = np.array([[dx, 0, 0, x0],
+                       [0, dy, 0, y0],
+                       [0, 0, dz, z0],
+                       [0, 0, 0, 1]])
+    
+    return affine
