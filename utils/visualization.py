@@ -25,8 +25,6 @@ def visualize_positional_encodings(pos_encoding, figsize=(15,10), title="Positio
         #show plot
         plt.show()
 
-
-
 def visualize_attention(attention_weights_avg, figsize=(15,15), fraction=0.02, pad=0.05, title='Average Attention Weights'):
     '''
     shows a visualization of a positional encoding in a tensor
@@ -112,6 +110,10 @@ def plot_learning_curves(df, metric, y_axis="epoch", figsize=(10, 5), show=False
         save_path (str):
             The path to save the plot.
             If None, the plot is not saved.
+
+    Returns:
+        matplotlib.pyplot:
+            The plot object.
     """
     if not isinstance(df, list):
         df = [df]
