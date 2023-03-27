@@ -4,7 +4,6 @@ import numpy as np
 import nibabel as nib
 
 from tqdm import tqdm
-from sklearn.model_selection import train_test_split
 
 
 def split_images_and_labels(input_folder):
@@ -95,52 +94,21 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
     # copy dataset from drive to virtual machine local disk
     shutil.copytree(dataset_folder_path, output_dataset_path)
 
-    # split the data into training and validation sets
-    train_images_files, val_images_files, train_labels_files, val_labels_files = train_test_split(
-        sorted(os.listdir(os.path.join(output_dataset_path, "imagesTr"))), 
-        sorted(os.listdir(os.path.join(output_dataset_path, "labelsTr"))), 
-        test_size=val_size,
-        random_state=42
-    )
+    # paths
+    train_images_files = sorted(os.listdir(os.path.join(output_dataset_path, "imagesTr")))
+    train_labels_files = sorted(os.listdir(os.path.join(output_dataset_path, "labelsTr")))
 
     # create train, val and test folders
-    os.makedirs(os.path.join(output_dataset_path, "train"))
-    os.makedirs(os.path.join(output_dataset_path, "val"))
-    os.makedirs(os.path.join(output_dataset_path, "test"))
     os.makedirs(os.path.join(output_dataset_path, "train_val"))
+    os.makedirs(os.path.join(output_dataset_path, "test"))
 
-    # copy training images and labels to train and train_val folders
+    # copy training images and labels to train_val folders
     for tr_im_file, tr_label_file in zip(train_images_files, train_labels_files):
-        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(output_dataset_path, "train", tr_im_file))
-        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(output_dataset_path, "train", tr_label_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(output_dataset_path, "train_val", tr_im_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(output_dataset_path, "train_val", tr_label_file))
-    # copy validation images and labels to val and train_val folders
-    for val_im_file, val_label_file in zip(val_images_files, val_labels_files):
-        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", val_im_file), os.path.join(output_dataset_path, "val", val_im_file))
-        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", val_label_file), os.path.join(output_dataset_path, "val", val_label_file))
-        shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", val_im_file), os.path.join(output_dataset_path, "train_val", val_im_file))
-        shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", val_label_file), os.path.join(output_dataset_path, "train_val", val_label_file))
     # copy test images to test folder
     for test_im_file in os.listdir(os.path.join(dataset_folder_path, "imagesTs")):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTs", test_im_file), os.path.join(output_dataset_path, "test", test_im_file))
-
-    # renames train files
-    for i, (im_tr, la_tr) in enumerate(zip(sorted(train_images_files), sorted(train_labels_files))):
-        os.rename(os.path.join(output_dataset_path, "train", im_tr), os.path.join(output_dataset_path, "train", f"image_{str(i).zfill(3)}.npy"))
-        os.rename(os.path.join(output_dataset_path, "train", la_tr), os.path.join(output_dataset_path, "train", f"label_{str(i).zfill(3)}.npy"))
-    # renames val files
-    for i, (im_val, la_val) in enumerate(zip(sorted(val_images_files), sorted(val_labels_files))):
-        os.rename(os.path.join(output_dataset_path, "val", im_val), os.path.join(output_dataset_path, "val", f"image_{str(i).zfill(3)}.npy"))
-        os.rename(os.path.join(output_dataset_path, "val", la_val), os.path.join(output_dataset_path, "val", f"label_{str(i).zfill(3)}.npy"))
-    # renames test files
-    for i, test_im in enumerate(sorted(os.listdir(os.path.join(output_dataset_path, "test")))):
-        os.rename(os.path.join(output_dataset_path, "test", test_im), os.path.join(output_dataset_path, "test", f"image_{str(i).zfill(3)}.npy"))
-    # renames train_val files
-    filenames = sorted(os.listdir(os.path.join(output_dataset_path, "train_val")))
-    for i, (im_tr_val, la_tr_val) in enumerate(zip(filenames[:len(filenames)//2], filenames[len(filenames)//2:])):
-        os.rename(os.path.join(output_dataset_path, "train_val", im_tr_val), os.path.join(output_dataset_path, "train_val", f"image_{str(i).zfill(3)}.npy"))
-        os.rename(os.path.join(output_dataset_path, "train_val", la_tr_val), os.path.join(output_dataset_path, "train_val", f"label_{str(i).zfill(3)}.npy"))
     
     # remove useless folders
     shutil.rmtree(os.path.join(output_dataset_path, "imagesTr"))

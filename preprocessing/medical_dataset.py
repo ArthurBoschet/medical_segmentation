@@ -6,10 +6,11 @@ import numpy as np
 from sklearn.model_selection import KFold
 from torch.utils.data import Dataset
 from utils.data_utils import normalize_3d_array
+from sklearn.model_selection import train_test_split
 
 
 class MedicalImageDataset(Dataset):
-    def __init__(self, path, num_classes=2, normalize=False, resize=None, transform=None):
+    def __init__(self, path, num_classes=2, train=True, normalize=True, resize=None, transform=None):
         '''
         Initialize the custom dataset for segmentation of 3D medical images
         
@@ -18,6 +19,8 @@ class MedicalImageDataset(Dataset):
                 Path to the folder containing the data for the task
             num_classes: int
                 Number of classes in the dataset
+            train: bool
+                Whether to load the train or validation split
             normalize: bool
                 Whether to normalize the images and labels between 0 and 1
             resize: tuple(int, int, int)
@@ -32,8 +35,22 @@ class MedicalImageDataset(Dataset):
         self.resize = resize
         self.transform = transform
 
+        train_images_files, val_images_files, train_labels_files, val_labels_files = train_test_split(
+            sorted(os.listdir(path)), 
+            sorted(os.listdir(path)), 
+            test_size=0.2,
+            random_state=42
+        )
+
+        if train:
+            self.images_files = train_images_files
+            self.labels_files = train_labels_files
+        else:
+            self.images_files = val_images_files
+            self.labels_files = val_labels_files
+
     def __len__(self):
-        return len([f for f in os.listdir(self.path) if f.startswith("image")])
+        return len(self.images_files)
 
     def __getitem__(self, idx):
         '''
@@ -50,9 +67,13 @@ class MedicalImageDataset(Dataset):
                 Tensor containing the label
             --> both tensors have shape (channels, depth, height, width)
         '''
-        # get image and label
-        image = np.load(os.path.join(self.path, f"image_{str(idx).zfill(3)}.npy"))
-        label = np.load(os.path.join(self.path, f"label_{str(idx).zfill(3)}.npy"))
+        # get image and label names
+        image_name = self.images_files[idx]
+        label_name = self.labels_files[idx]
+
+        # get image and label numpy arrays
+        image = np.load(os.path.join(self.path, image_name))
+        label = np.load(os.path.join(self.path, label_name))
 
         # apply normalization if necessary
         if self.normalize:
@@ -114,7 +135,7 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
             fold: int
                 Current fold (0-indexed) for cross-validation
             train: bool
-                Whether to use the train or validation split
+                Whether to load the train or validation split
             *args, **kwargs:
                 Additional arguments to pass to the MedicalImageDataset constructor
         '''
@@ -122,19 +143,26 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
         self.k_folds = k_folds
         self.fold = fold
         self.train = train
+
+        filenames = sorted(os.listdir(path))
+        self.images_files = filenames[:len(filenames)//2]
+        self.labels_files = filenames[len(filenames)//2:]
         
         num_samples = len([f for f in os.listdir(self.path) if f.startswith("image")])
         self.indices = list(range(num_samples))
+
         self.kfold = KFold(n_splits=self.k_folds, shuffle=True, random_state=42)
         self.train_indices, self.val_indices = list(self.kfold.split(self.indices))[self.fold]
 
         if self.train:
-            self.current_indices = self.train_indices
+            self.images_files = [self.images_files[i] for i in self.train_indices]
+            self.labels_files = [self.labels_files[i] for i in self.train_indices]
         else:
-            self.current_indices = self.val_indices
+            self.images_files = [self.images_files[i] for i in self.val_indices]
+            self.labels_files = [self.labels_files[i] for i in self.val_indices]
 
     def __len__(self):
-        return len(self.current_indices)
+        super().__len__()
 
     def __getitem__(self, idx):
         '''
@@ -151,5 +179,80 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
                 Tensor containing the label
             --> both tensors have shape (channels, depth, height, width)
         '''
-        actual_idx = self.current_indices[idx]
-        return super().__getitem__(actual_idx)
+        return super().__getitem__(idx)
+
+
+class MedicalImageDatasetTest(Dataset):
+    def __init__(self, path, normalize=True, resize=None, transform=None):
+        '''
+        Initialize the custom dataset for segmentation of 3D medical images
+        
+        Args:
+            path: str
+                Path to the folder containing the test data for the task
+            normalize: bool
+                Whether to normalize the images and labels between 0 and 1
+            resize: tuple(int, int, int)
+                Size to resize the images and labels to
+                Remember: (depth, height, width)
+            transform: torchvision.transforms
+                Transformations to apply to the images and labels
+        '''
+        self.path = path
+        self.normalize = normalize
+        self.resize = resize
+        self.transform = transform
+
+        self.images_files = sorted(os.listdir(path))
+
+    def __len__(self):
+        return len(self.images_files)
+
+    def __getitem__(self, idx):
+        '''
+        Get the image and label at the given index
+        
+        Args:
+            idx: int
+                Index of the image and label to get
+                
+        Returns:
+            image: torch.Tensor
+                Tensor containing the image
+            --> tensor has shape (channels, depth, height, width)
+        '''
+        # get image name
+        image_name = self.images_files[idx]
+
+        # get image numpy array
+        image = np.load(os.path.join(self.path, image_name))
+
+        # apply normalization if necessary
+        if self.normalize:
+            image = normalize_3d_array(image)
+
+        # convert to torch tensor
+        image = torch.from_numpy(image).float()
+
+        # add channel dimension
+        image = image.unsqueeze(0)
+
+        # add batch dimension
+        image = image.unsqueeze(0)
+
+        # resize tensor if necessary
+        if self.resize is not None:
+            image = torch.nn.functional.interpolate(image, size=self.resize, mode="trilinear")
+
+        # remove batch dimension
+        image = image.squeeze(0)
+
+        # apply transformations if necessary
+        if self.transform is not None:
+            subject = tio.Subject(
+                image=tio.Image(tensor=image, type=tio.INTENSITY)
+            )
+            subject = self.transform(subject)
+            image = subject.image.data
+
+        return image
