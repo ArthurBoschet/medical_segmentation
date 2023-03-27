@@ -66,6 +66,7 @@ def log_wandb_run(model,
         "dataset": train_dataloader.dataset.dataset_task,
         "shuffle": train_dataloader.dataset.shuffle,
         "normalize": train_dataloader.dataset.normalize,
+        "transform": train_dataloader.dataset.transform
     }
 
     # initialize wandb

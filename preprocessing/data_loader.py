@@ -51,6 +51,7 @@ def load_data(data_folder_path,
     train_dataloader.dataset.num_classes = num_classes
     train_dataloader.dataset.shuffle = shuffle
     train_dataloader.dataset.normalize = normalize
+    train_dataloader.dataset.transform = transform
 
     return train_dataloader, val_dataloader
 
@@ -108,6 +109,7 @@ def load_data_kfold(data_folder_path,
     train_dataloader.dataset.num_classes = num_classes
     train_dataloader.dataset.shuffle = shuffle
     train_dataloader.dataset.normalize = normalize
+    train_dataloader.dataset.transform = transform
 
     return train_dataloader, val_dataloader
 
