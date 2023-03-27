@@ -146,3 +146,18 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
     shutil.rmtree(os.path.join(output_dataset_path, "imagesTr"))
     shutil.rmtree(os.path.join(output_dataset_path, "labelsTr"))
     shutil.rmtree(os.path.join(output_dataset_path, "imagesTs"))
+
+def save_nifti(image, affine, filename):
+    '''
+    Save a 3D image to a nifti file.
+    
+    Args:
+        image (np.array): 
+            3D image
+        affine (np.array):
+            Affine matrix
+        filename (str):
+            Path to the nifti file
+    '''
+    img = nib.Nifti1Image(image, affine)
+    nib.save(img, filename)
