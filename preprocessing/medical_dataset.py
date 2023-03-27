@@ -170,7 +170,7 @@ class KFoldMedicalImageDataset(MedicalImageDataset):
             self.labels_files = [labels_filenames[i] for i in self.val_indices]
 
     def __len__(self):
-        super().__len__()
+        return super().__len__()
 
     def __getitem__(self, idx):
         '''
