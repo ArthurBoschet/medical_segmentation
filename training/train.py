@@ -9,11 +9,10 @@ from models.evaluation.metrics import iou_score
 
 
 def train(model, 
-          batch_size,
-          num_classes,
-          device,
           train_dataloader, 
-          val_dataloader, 
+          val_dataloader,
+          batch_size,
+          num_classes, 
           num_epochs=50, 
           patience=50, 
           optimizer=None, 
@@ -28,14 +27,14 @@ def train(model,
     Args:
         model: nn.Module 
             Model to train
-        batch_size: int
-            Batch size
-        num_classes: int
-            Number of classes
         train_dataloader: torch.utils.data.DataLoader
             Dataloader for training set
         val_dataloader: torch.utils.data.DataLoader
             Dataloader for validation set
+        batch_size: int
+            Batch size
+        num_classes: int
+            Number of classes
         num_epochs: int
             Number of epochs to train the model
         patience: int
@@ -65,10 +64,6 @@ def train(model,
     val_iou = [0 for i in range(num_classes)]
     val_f1_macro = 0
 
-    # initialize best validation loss
-    best_val_loss = np.inf
-    best_epoch = 0
-
     # initialize lists to store loss and dice scores
     train_loss_list = []
     train_dice_list = [[] for i in range(num_classes)]
@@ -79,8 +74,11 @@ def train(model,
     val_iou_list = [[] for i in range(num_classes)]
     val_f1_macro_list = []
 
-    # initialize patience count
+    # initialize training params
+    best_val_loss = np.inf
+    best_epoch = 0
     patience_count = 0
+    slices_dic = {}
 
     # setup torchmetrics
     dice = Dice(num_classes=1, average='micro').to(device)
@@ -150,7 +148,6 @@ def train(model,
                   val_iou[i] += iou_score(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
 
                 #log segmentation output to wandb
-                slices_dic = {}
                 if j == 0 and epoch%5 == 0 and wandb_log and segmentation_ouput:
                     val_im = images[0]
                     val_label = labels[0]
@@ -169,7 +166,6 @@ def train(model,
                             ax[i].imshow(label_type[s], cmap="jet", alpha=0.3)
                             ax[i].set_title(plot_title)
                         slices_dic = slices_dic | {f"slice_{s}": fig}
-                        #wandb.log({f"slice_{s}": fig})
                         plt.close()
 
         # calculate average loss and dice scores
@@ -241,7 +237,7 @@ def train(model,
         #scheduler update
         scheduler.step(val_loss)
 
-        # reset statistics
+        # reset params
         train_loss = 0
         train_dice = [0 for i in range(num_classes)]
         train_iou = [0 for i in range(num_classes)]
@@ -250,9 +246,7 @@ def train(model,
         val_dice = [0 for i in range(num_classes)]
         val_iou = [0 for i in range(num_classes)]
         val_f1_macro = 0
-
-        
-
+        slices_dic = {}
 
     if wandb_log:
         val_dice_max = {f"max_val_dice_{i}":max(val_dice_list[i]) for i in range(num_classes)}

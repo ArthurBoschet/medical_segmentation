@@ -81,11 +81,10 @@ def log_wandb_run(model,
     wandb.watch(model, log="all")
 
     train(model, 
-          batch_size,
-          num_classes,
-          device,
           train_dataloader, 
           val_dataloader, 
+          batch_size,
+          num_classes,
           num_epochs=num_epochs, 
           patience=patience, 
           optimizer=optimizer, 
