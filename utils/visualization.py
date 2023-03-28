@@ -92,7 +92,7 @@ def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize
         plt.show()
 
 
-def plot_learning_curves(dfs, metric, model_name, y_axis, figsize=(10, 5), show=False, save_path=None):
+def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show=False, save_path=None):
     """
     Plot the learning curves of a model for k-fold cross-validation training.
 
@@ -102,8 +102,8 @@ def plot_learning_curves(dfs, metric, model_name, y_axis, figsize=(10, 5), show=
             i.e. [model1[fold1_df, fold2_df, ...], model2[fold1_df, fold2_df, ...], ...]
         metric (str):
             The metric to plot.
-        model_name (str):
-            The name of the model used for training.
+        model_names list(str):
+            List of names of the models used for training.
         y_axis (str):
             The y-axis name on the plot.
         figsize (tuple):
@@ -120,13 +120,14 @@ def plot_learning_curves(dfs, metric, model_name, y_axis, figsize=(10, 5), show=
     """
     assert isinstance(dfs, list)
     assert isinstance(dfs[0], list)
+    assert isinstance(model_names, list)
 
     colors = ["blue", "red", "green", "orange", "purple", "brown", "pink", "gray", "olive", "cyan"]
     plt.figure(figsize=figsize)
     for i, df in enumerate(dfs):
         mean = np.mean([fold_df[metric] for fold_df in df], axis=0)
         std = np.std([fold_df[metric] for fold_df in df], axis=0)
-        plt.plot(mean, label=model_name, color=colors[i])
+        plt.plot(mean, label=model_names[0], color=colors[i])
         plt.fill_between(np.arange(len(mean)), mean - std, mean + std, alpha=0.15, color=colors[i])
     plt.legend()
     plt.xlabel("Epoch")
