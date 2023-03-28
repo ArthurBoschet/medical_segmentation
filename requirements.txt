@@ -23,6 +23,7 @@ torchmetrics==0.11.4
 torchio==0.18.90
 monai==1.1.0
 einops==0.6.0
+plotly==5.13.1
 
 # nnUNet requirements
 -e preprocessing/nnUNet .
