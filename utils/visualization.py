@@ -91,7 +91,8 @@ def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize
         # show plot
         plt.show()
 
-def plot_learning_curves(df, metric, y_axis="epoch", figsize=(10, 5), show=False, save_path=None):
+
+def plot_learning_curves(df, metric, model_name, y_axis="epoch", figsize=(10, 5), show=False, save_path=None):
     """
     Plot the learning curves of a model for k-fold cross-validation training.
 
@@ -101,6 +102,8 @@ def plot_learning_curves(df, metric, y_axis="epoch", figsize=(10, 5), show=False
             Accepts list of dataframes.
         metric (str):
             The metric to plot.
+        model_name (str):
+            The name of the model used for training.
         y_axis (str):
             The y-axis name on the plot.
         figsize (tuple):
@@ -122,14 +125,14 @@ def plot_learning_curves(df, metric, y_axis="epoch", figsize=(10, 5), show=False
     val_mean = np.mean([fold_df[f"val_{metric}"] for fold_df in df], axis=0)
     val_std = np.std([fold_df[f"val_{metric}"] for fold_df in df], axis=0)
     plt.figure(figsize=figsize)
-    plt.plot(train_mean, label="Training Score", color="blue", marker="o")
+    plt.plot(train_mean, label="Training Score", color="blue")
     plt.fill_between(np.arange(len(train_mean)), train_mean - train_std, train_mean + train_std, alpha=0.15, color="blue")
-    plt.plot(val_mean, label="Cross Validation Score", color="red", marker="s")
+    plt.plot(val_mean, label="Cross Validation Score", color="red")
     plt.fill_between(np.arange(len(val_mean)), val_mean - val_std, val_mean + val_std, alpha=0.15, color="red")
     plt.legend()
     plt.xlabel("Epoch")
     plt.ylabel(y_axis)
-    plt.title(f"Learning curve for {y_axis} on {len(df)} folds")
+    plt.title(f"{model_name} - {y_axis} on {len(df)} folds")
     plt.grid()
     if show:
         plt.show()
