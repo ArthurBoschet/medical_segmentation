@@ -374,6 +374,7 @@ class ResConvBlockUnetr(BaseConvBlock):
             
         self.conv_block_1 =  self.base_block(in_channels)
         self.conv_block_2 =  self.base_block(out_channels)
+        self.skip_resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
 
             
     def forward(self, x):
@@ -387,6 +388,9 @@ class ResConvBlockUnetr(BaseConvBlock):
 
         #skip connection
         x_skip = x
+
+        #resise skip connection
+        x_skip = self.skip_resize(x_skip)
 
         #second convolution
         x = self.conv_block_1(x)
