@@ -133,10 +133,11 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     plt.xlabel("Epoch")
     plt.ylabel(y_axis)
     plt.title(f"{y_axis} on {len(df)} folds")
+    plt.rc('font', size=18)
     plt.grid()
-    if show:
-        plt.show()
     if save_path is not None:
         plt.savefig(save_path)
+    if show:
+        plt.show()
     
     return plt
