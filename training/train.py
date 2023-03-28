@@ -73,12 +73,12 @@ def train(model,
     val_dice_list = [[] for i in range(num_classes)]
     val_iou_list = [[] for i in range(num_classes)]
     val_f1_macro_list = []
+    slices_dic = {}
 
     # initialize training params
     best_val_loss = np.inf
     best_epoch = 0
     patience_count = 0
-    slices_dic = {}
 
     # setup torchmetrics
     dice = Dice(num_classes=1, average='micro').to(device)
