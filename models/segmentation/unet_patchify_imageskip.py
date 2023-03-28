@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from segmentation.segmentation import SegmentationModel
+from segmentation import SegmentationModel
 from encoders.conv_swinpatch_encoder import ConvPatchEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
@@ -69,7 +69,7 @@ class UNetPatch(SegmentationModel):
         # decoder
         self.decoder = ConvDecoder(
             self.encoder.compute_output_dimensions(),
-            num_channels_list[-2::-1],# -2 à -1
+            num_channels_list[-2::-1],
             kernel_size=kernel_size,
             activation=activation,
             normalization=normalization,
@@ -94,3 +94,57 @@ class UNetPatch(SegmentationModel):
         x = self.output_layer(x)
         return x
 
+
+import torch
+# init default parameters
+input = torch.rand((2, 1,128, 128, 128))
+input_shape = input.shape[1:]
+num_classes = 2
+num_channels_list = [32, 64, 128, 256, 320]
+kernel_size = 3
+scale_factor = 2
+activation = nn.LeakyReLU
+normalization = nn.InstanceNorm3d
+block_type = DoubleConvBlock
+downsampling = MaxPool3dDownscale
+upsampling = TransposeConv3dUpsample
+skip_mode = "add"
+dropout = 0.1
+
+#torch device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"The device is {device}")
+
+# init model
+
+unet_model = UNetPatch(input_shape,
+                  num_classes,
+                  num_channels_list, 50,
+                  kernel_size=kernel_size,
+                  scale_factor=scale_factor,
+                  activation=activation,
+                  normalization=normalization,
+                  block_type=block_type,
+                  downsampling=downsampling,
+                  upsampling=upsampling,
+                  skip_mode=skip_mode,
+                  dropout=dropout)
+
+'''
+unet_model = UNet(input_shape,
+                  num_classes,
+                  num_channels_list,
+                  kernel_size=kernel_size,
+                  scale_factor=scale_factor,
+                  activation=activation,
+                  normalization=normalization,
+                  block_type=block_type,
+                  downsampling=downsampling,
+                  upsampling=upsampling,
+                  skip_mode=skip_mode,
+                  dropout=dropout)
+'''
+
+output = unet_model(input.to(device))
+print('input shape:', input.shape)
+print('output shape unet:', output.shape)
