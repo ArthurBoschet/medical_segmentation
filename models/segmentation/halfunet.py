@@ -73,6 +73,8 @@ class HalfUNet(SegmentationModel):
             skip_mode=skip_mode,
             dropout=dropout,
         )
+        print(self.encoder.compute_output_dimensions())
+        print(self.decoder)
 
         # ouput layer (channelwise mlp) to have the desired number of classes
         self.output_layer = nn.Conv3d(
@@ -90,56 +92,3 @@ class HalfUNet(SegmentationModel):
         return x
 
 
-import torch
-# init default parameters
-input = torch.rand((2, 1,32, 64, 64))
-input_shape = input.shape[1:]
-num_classes = 2
-num_channels_list = [32, 64, 128]
-kernel_size = 3
-scale_factor = 2
-activation = nn.LeakyReLU
-normalization = nn.InstanceNorm3d
-block_type = DoubleConvBlock
-downsampling = MaxPool3dDownscale
-upsampling = TransposeConv3dUpsample
-skip_mode = "add"
-dropout = 0.1
-
-#torch device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"The device is {device}")
-
-# init model
-
-unet_model = HalfUNet(input_shape,
-                  num_classes,
-                  num_channels_list,
-                  kernel_size=kernel_size,
-                  scale_factor=scale_factor,
-                  activation=activation,
-                  normalization=normalization,
-                  block_type=block_type,
-                  downsampling=downsampling,
-                  upsampling=upsampling,
-                  skip_mode=skip_mode,
-                  dropout=dropout)
-
-'''
-unet_model = UNet(input_shape,
-                  num_classes,
-                  num_channels_list,
-                  kernel_size=kernel_size,
-                  scale_factor=scale_factor,
-                  activation=activation,
-                  normalization=normalization,
-                  block_type=block_type,
-                  downsampling=downsampling,
-                  upsampling=upsampling,
-                  skip_mode=skip_mode,
-                  dropout=dropout)
-'''
-
-output = unet_model(input.to(device))
-print('input shape:', input.shape)
-print('output shape unet:', output.shape)

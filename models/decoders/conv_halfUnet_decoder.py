@@ -61,7 +61,7 @@ class ConvHalfDecoder(nn.Module):
         self.upscaling_layers = nn.ModuleList()
 
         # construction loop initialization
-        prev_shape = self.encoder_shapes[0]
+        prev_shape = self.encoder_shapes[0] # output shape
         c_in = prev_shape[1]
 
         final_shape = self.encoder_shapes[-1]
