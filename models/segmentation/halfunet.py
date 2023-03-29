@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from segmentation import SegmentationModel
+from segmentation.segmentation import SegmentationModel
 from encoders.conv_encoder import ConvEncoder
 from decoders.conv_halfUnet_decoder import ConvHalfDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
@@ -23,6 +23,8 @@ class HalfUNet(SegmentationModel):
             upsampling=TransposeConv3dUpsample,
             skip_mode='append',
             dropout=0,
+            channel_ouputconv=64,
+            num_outputconv=2
             ):
         '''
         Implementation of a UNet model
@@ -72,9 +74,9 @@ class HalfUNet(SegmentationModel):
             upsampling=upsampling,
             skip_mode=skip_mode,
             dropout=dropout,
+            channel_ouputconv=channel_ouputconv,
+            num_outputconv=num_outputconv
         )
-        print(self.encoder.compute_output_dimensions())
-        print(self.decoder)
 
         # ouput layer (channelwise mlp) to have the desired number of classes
         self.output_layer = nn.Conv3d(

@@ -1,13 +1,13 @@
 import torch.nn as nn
 import torch
-from models.blocks.conv_blocks import ResConvBlockUnetr
+from models.blocks.conv_blocks import ResConvBlock
 from models.blocks.downsampling import MaxPool3dDownscale
 from models.blocks.upsampling import TransposeConv3dUpsample
 from models.segmentation.unet import UNet
 
-def make_unet_resblock1(dropout):
+def make_unet_resblock2(dropout):
     '''
-    Function that instanciates a unet ResConvBlock model
+    Function that instanciates a unet resblock2 model
     Parameters:
         dropout (float): dropout rate
     Returns:
@@ -21,7 +21,7 @@ def make_unet_resblock1(dropout):
     scale_factor = 2
     activation = nn.LeakyReLU
     normalization = nn.InstanceNorm3d
-    block_type = ResConvBlockUnetr
+    block_type = ResConvBlock
     downsampling = MaxPool3dDownscale
     upsampling = TransposeConv3dUpsample
     skip_mode = "append"
