@@ -185,6 +185,7 @@ def plot_seaborn_fold_wise(plot_type, df_baseline, dfs_compared, metric, model_n
         max_metric_list_baseline.append(np.max(baseline_fold[metric].values))
 
     plt.figure(figsize=figsize)
+    plt.axhline(y=0, color='black', linestyle='--')
     dic = {}
     for i, model_df in enumerate(dfs_compared):
         max_metric_list_compared = []
