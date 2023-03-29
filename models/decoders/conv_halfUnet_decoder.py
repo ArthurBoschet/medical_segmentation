@@ -32,6 +32,8 @@ class ConvHalfDecoder(nn.Module):
             block_type (blocks.conv_blocks.BaseConvBlock): one the conv blocks inheriting from the BaseConvBlock class
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
             dropout (float): dropout added to the layer
+            channel_ouputconv (int): number of channel at input of convolutionnal layer of the decoder
+            num_outputconv (int) : number of convolutional layer at the end of the decoder
         '''
         super(ConvHalfDecoder, self).__init__()
 

@@ -39,8 +39,8 @@ class HalfUNet(SegmentationModel):
             downsampling (blocks.conv.downsampling.Downscale): downsampling scheme
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
             dropout (float): dropout added to the layer
-            patch_size (int) : patch size for patch embedding
-            channel_embedding (int) : number of channel for patch embedding
+            channel_ouputconv (int): number of channel at input of convolutionnal layer of the decoder
+            num_outputconv (int) : number of convolutional layer at the end of the decoder
         '''
 
         super(HalfUNet, self).__init__()
