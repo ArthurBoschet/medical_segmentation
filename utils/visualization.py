@@ -122,14 +122,14 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     assert isinstance(dfs[0], list)
     assert isinstance(model_names, list)
 
-    colors = ["blue", "red", "green", "orange"]
+    colors = ["#377eb8", "#4daf4a", "#ff7f00", "#e41c1c"]
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     plt.figure(figsize=figsize)
     for i, df in enumerate(dfs):
         mean = np.mean([fold_df[metric] for fold_df in df], axis=0)
         std = np.std([fold_df[metric] for fold_df in df], axis=0)
         plt.plot(mean, label=model_names[i], color=colors[i], linestyle=linestyles[i])
-        plt.fill_between(np.arange(len(mean)), mean - std, mean + std, alpha=0.15, color=colors[i])
+        plt.fill_between(np.arange(len(mean)), mean - std, mean + std, alpha=0.10, color=colors[i])
     plt.legend()
     plt.xlabel("Epoch")
     plt.ylabel(y_axis)
