@@ -440,7 +440,7 @@ class ConvNextBLock(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
         #normalization
-        self.normalization = normalization()
+        self.normalization = normalization(in_channels)
 
         #second conv
         self.conv1 = nn.Conv3d(in_channels, up_factor*in_channels, 1, stride=1)
