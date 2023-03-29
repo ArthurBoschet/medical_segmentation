@@ -435,20 +435,20 @@ class ConvNextBLock(nn.Module):
         '''
         
         #depth convolution
-        self.depth_conv = nn.Conv3d(in_channels, in_channels, kernel_size, stride=stride, padding='same', groups=in_channels)
+        self.depth_conv = nn.Conv3d(in_channels, out_channels, kernel_size, stride=stride, padding='same', groups=in_channels)
 
         self.dropout = nn.Dropout(p=dropout)
 
         #normalization
-        self.normalization = normalization(in_channels)
+        self.normalization = normalization(out_channels)
 
         #second conv
-        self.conv1 = nn.Conv3d(in_channels, up_factor*in_channels, 1, stride=1)
+        self.conv1 = nn.Conv3d(out_channels, up_factor*out_channels, 1, stride=1)
 
         #non linearity
         self.activation = activation()
 
-        self.conv2 = nn.Conv3d(up_factor*in_channels, out_channels, 1, stride=1)
+        self.conv2 = nn.Conv3d(up_factor*out_channels, out_channels, 1, stride=1)
 
         self.skip_resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
