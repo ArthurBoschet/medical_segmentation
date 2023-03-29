@@ -91,16 +91,19 @@ def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize
         # show plot
         plt.show()
 
-def plot_learning_curves(df, metric, y_axis="epoch", figsize=(10, 5), show=False, save_path=None):
+
+def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show=False, save_path=None):
     """
     Plot the learning curves of a model for k-fold cross-validation training.
 
     Args:
-        df (pandas.DataFrame):
-            The logged data as a pandas DataFrame.
-            Accepts list of dataframes.
+        dfs list(list(pandas.DataFrame)):
+            The logged data as a list of list of pandas DataFrame.
+            i.e. [model1[fold1_df, fold2_df, ...], model2[fold1_df, fold2_df, ...], ...]
         metric (str):
             The metric to plot.
+        model_names list(str):
+            List of names of the models used for training.
         y_axis (str):
             The y-axis name on the plot.
         figsize (tuple):
@@ -115,25 +118,26 @@ def plot_learning_curves(df, metric, y_axis="epoch", figsize=(10, 5), show=False
         matplotlib.pyplot:
             The plot object.
     """
-    if not isinstance(df, list):
-        df = [df]
-    train_mean = np.mean([fold_df[f"train_{metric}"] for fold_df in df], axis=0)
-    train_std = np.std([fold_df[f"train_{metric}"] for fold_df in df], axis=0)
-    val_mean = np.mean([fold_df[f"val_{metric}"] for fold_df in df], axis=0)
-    val_std = np.std([fold_df[f"val_{metric}"] for fold_df in df], axis=0)
+    assert isinstance(dfs, list)
+    assert isinstance(dfs[0], list)
+    assert isinstance(model_names, list)
+
+    colors = ["blue", "red", "green", "orange", "purple", "brown", "pink", "gray", "olive", "cyan"]
     plt.figure(figsize=figsize)
-    plt.plot(train_mean, label="Training Score", color="blue", marker="o")
-    plt.fill_between(np.arange(len(train_mean)), train_mean - train_std, train_mean + train_std, alpha=0.15, color="blue")
-    plt.plot(val_mean, label="Cross Validation Score", color="red", marker="s")
-    plt.fill_between(np.arange(len(val_mean)), val_mean - val_std, val_mean + val_std, alpha=0.15, color="red")
+    for i, df in enumerate(dfs):
+        mean = np.mean([fold_df[metric] for fold_df in df], axis=0)
+        std = np.std([fold_df[metric] for fold_df in df], axis=0)
+        plt.plot(mean, label=model_names[i], color=colors[i])
+        plt.fill_between(np.arange(len(mean)), mean - std, mean + std, alpha=0.15, color=colors[i])
     plt.legend()
     plt.xlabel("Epoch")
     plt.ylabel(y_axis)
-    plt.title(f"Learning curve for {y_axis} on {len(df)} folds")
+    plt.title(f"{y_axis} on {len(df)} folds")
+    plt.rc('font', size=14)
     plt.grid()
-    if show:
-        plt.show()
     if save_path is not None:
         plt.savefig(save_path)
+    if show:
+        plt.show()
     
     return plt

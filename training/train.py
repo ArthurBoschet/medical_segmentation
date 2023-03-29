@@ -76,7 +76,7 @@ def train(model,
     slices_dic = {}
 
     # initialize training params
-    best_val_loss = np.inf
+    best_val_dice = 0
     best_epoch = 0
     patience_count = 0
 
@@ -221,9 +221,9 @@ def train(model,
             wandb.log(wandb_dict)
 
         # save best model
-        if val_loss < best_val_loss:
+        if wandb_dict["val_dice_1"] > best_val_dice:
             patience_count = 0
-            best_val_loss = val_loss
+            best_val_dice = wandb_dict["val_dice_1"]
             best_epoch = epoch
             torch.save(model.state_dict(), "best_model.pt")
             if wandb_log:
