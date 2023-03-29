@@ -438,7 +438,7 @@ class ConvNextBLock(nn.Module):
         self.resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
         #depth convolution
-        self.depth_conv = nn.Conv3d(out_channels, out_channels, kernel_size, stride=stride, padding='same', groups=in_channels)
+        self.depth_conv = nn.Conv3d(out_channels, out_channels, kernel_size, stride=stride, padding='same', groups=out_channels)
 
         #dropout
         self.dropout = nn.Dropout(p=dropout)
