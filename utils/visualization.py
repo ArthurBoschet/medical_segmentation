@@ -136,7 +136,7 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     plt.xlabel("Epoch")
     plt.ylabel(y_axis)
     plt.title(f"{y_axis} on {len(df)} folds")
-    plt.rc('font', size=14)
+    # plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
         plt.savefig(save_path)
@@ -202,7 +202,7 @@ def plot_seaborn_fold_wise(plot_type, df_baseline, dfs_compared, metric, model_n
         sns.barplot(data=df)
     plt.ylabel(y_axis)
     plt.title(f"Fold-wise difference with UNet baseline on {y_axis}")
-    plt.rc('font', size=14)
+    # plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
         plt.savefig(save_path)
