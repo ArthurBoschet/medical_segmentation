@@ -19,6 +19,8 @@ class ConvHalfDecoder(nn.Module):
                  upsampling=TransposeConv3dUpsample,
                  skip_mode='add',
                  dropout=0,
+                 channel_ouputconv = 64,
+                 num_outputconv = 2
                  ):
         '''
         Convolutional decoder for UNet model. We assume that every convolution is a same convolution with no dilation.
@@ -48,10 +50,7 @@ class ConvHalfDecoder(nn.Module):
 
         # skip connections parameters
         self.skip_mode = skip_mode
-        # if self.skip_mode == 'add':
-        #     for shape, c in zip(self.encoder_shapes[1:], self.num_channels_list):
-        #         assert shape[
-        #                    1] == c, f"the number of channels entered was {c} but {shape[1]} was expected based on encoder shapes in 'add' mode"
+
 
         # conv parameters for same convolution
         self.kernel_size = kernel_size
@@ -78,6 +77,30 @@ class ConvHalfDecoder(nn.Module):
             # upsampling added
             self.upscaling_layers.append(upscale_block)
 
+        self.conv_blocks = nn.ModuleList()
+        self.block_instanciator = lambda in_channels, out_channels: block_type(
+            in_channels,
+            out_channels,
+            kernel_size,
+            padding=kernel_size // 2,
+            activation=activation,
+            normalization=normalization,
+            dropout=dropout,
+        )
+
+        c_in = final_c
+        c_out = channel_ouputconv
+        for _ in range(num_outputconv):
+            self.conv_blocks.append(self.block_instanciator(c_in, c_out))
+            c_in = c_out
+        self.conv_blocks.append(block_type(
+                                    c_in,
+                                   num_channels_list[-1],
+                                    1,
+                                    padding=0,
+                                    activation=activation,
+                                    normalization=normalization,
+                                    dropout=dropout))
 
     def forward(self, x, skips):
         '''
@@ -111,6 +134,8 @@ class ConvHalfDecoder(nn.Module):
             else:
                 raise NotImplementedError(f"{self.skip_mode} has not been implemented")
 
+        for layer in self.conv_blocks:
+            x = layer(x)
 
         return x
 
@@ -127,3 +152,4 @@ class ConvHalfDecoder(nn.Module):
             dimensions.append(tuple(dim))
 
         return dimensions
+
