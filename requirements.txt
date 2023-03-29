@@ -24,6 +24,7 @@ torchio==0.18.90
 monai==1.1.0
 einops==0.6.0
 plotly==5.13.1
+seaborn==0.12.2
 
 # nnUNet requirements
 -e preprocessing/nnUNet .

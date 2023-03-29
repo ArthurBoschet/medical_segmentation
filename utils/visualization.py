@@ -1,4 +1,6 @@
 import numpy as np
+import seaborn as sns
+import pandas as pd
 import matplotlib.pyplot as plt
 from ipywidgets import interact
 
@@ -134,6 +136,71 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     plt.xlabel("Epoch")
     plt.ylabel(y_axis)
     plt.title(f"{y_axis} on {len(df)} folds")
+    plt.rc('font', size=14)
+    plt.grid()
+    if save_path is not None:
+        plt.savefig(save_path)
+    if show:
+        plt.show()
+    
+    return plt
+
+
+def plot_seaborn_fold_wise(plot_type, df_baseline, dfs_compared, metric, model_names, y_axis, figsize=(10, 5), show=False, save_path=None):
+    """
+    Plot the box plots of a model for k-fold cross-validation training.
+
+    Args:
+        plot_type (str):
+            The type of plot to use. Can be "box", "violin" or "bar".
+        df_baseline (pandas.DataFrame):
+            The logged data of the baseline model as a pandas DataFrame.
+        dfs_compared list(list(pandas.DataFrame)):
+            The logged data of the compared models as a list of list of pandas DataFrame.
+            i.e. [model1[fold1_df, fold2_df, ...], model2[fold1_df, fold2_df, ...], ...]
+        dfs list(list(pandas.DataFrame)):
+        metric (str):
+            The metric to plot.
+        model_names list(str):
+            List of names of the models used for training.
+        y_axis (str):
+            The y-axis name on the plot.
+        figsize (tuple):
+            The figure size.
+        show (bool):
+            Whether to show the plot.
+        save_path (str):
+            The path to save the plot.
+            If None, the plot is not saved.
+
+    Returns:
+        seaborn.boxplot:
+            The boxplot object.
+    """
+    assert isinstance(dfs_compared[0], list)
+    assert isinstance(model_names, list)
+
+    max_metric_list_baseline = []
+    for baseline_fold in df_baseline:
+        max_metric_list_baseline.append(np.max(baseline_fold[metric].values))
+
+    plt.figure(figsize=figsize)
+    dic = {}
+    for i, model_df in enumerate(dfs_compared):
+        max_metric_list_compared = []
+        for fold_df in model_df:
+            max_metric_list_compared.append(np.max(fold_df[metric].values))
+        difference_list = [max_metric_list_compared[i] - max_metric_list_baseline[i] for i in range(len(max_metric_list_baseline))]
+        dic = dic | {model_names[i]: difference_list}
+    df = pd.DataFrame(dic)
+    if plot_type == "box":
+        sns.boxplot(data=df)
+    elif plot_type == "violin":
+        sns.violinplot(data=df)
+    elif plot_type == "bar":
+        sns.barplot(data=df)
+    plt.ylabel(y_axis)
+    plt.title(f"Fold-wise difference with UNet baseline on {y_axis}")
     plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
