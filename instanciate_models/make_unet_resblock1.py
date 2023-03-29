@@ -7,7 +7,7 @@ from models.segmentation.unet import UNet
 
 def make_unet_resblock1(dropout):
     '''
-    Function that instanciates a unet baseline model
+    Function that instanciates a unet ResConvBlock model
     Parameters:
         dropout (float): dropout rate
     Returns:
