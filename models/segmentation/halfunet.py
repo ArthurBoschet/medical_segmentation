@@ -21,7 +21,6 @@ class HalfUNet(SegmentationModel):
             block_type=DoubleConvBlock,
             downsampling=MaxPool3dDownscale,
             upsampling=TransposeConv3dUpsample,
-            skip_mode='append',
             dropout=0,
             channel_ouputconv=64,
             num_outputconv=2
@@ -39,7 +38,6 @@ class HalfUNet(SegmentationModel):
             block_type (blocks.conv_blocks.BaseConvBlock): one the conv blocks inheriting from the BaseConvBlock class
             downsampling (blocks.conv.downsampling.Downscale): downsampling scheme
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
-            skip_mode (str): one of 'append' | 'add' refers to how the skip connection is added back to the decoder path
             dropout (float): dropout added to the layer
             patch_size (int) : patch size for patch embedding
             channel_embedding (int) : number of channel for patch embedding
@@ -72,7 +70,6 @@ class HalfUNet(SegmentationModel):
             normalization=normalization,
             block_type=block_type,
             upsampling=upsampling,
-            skip_mode=skip_mode,
             dropout=dropout,
             channel_ouputconv=channel_ouputconv,
             num_outputconv=num_outputconv
