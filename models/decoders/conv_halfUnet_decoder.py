@@ -69,6 +69,9 @@ class ConvHalfDecoder(nn.Module):
             # upsampling added
             self.upscaling_layers.append(upscale_block)
 
+        #resize the channels of the first skip connection
+        self.upscaling_layers.append(nn.Conv3d(self.encoder_shapes[-1][1], channel_ouputconv, 1, stride=1))
+
         self.conv_blocks = nn.ModuleList()
         self.block_instanciator = lambda in_channels, out_channels: block_type(
             in_channels,
@@ -105,9 +108,7 @@ class ConvHalfDecoder(nn.Module):
         # iterate over the number of blocks
         for i, skip in enumerate(skips[:]):
 
-            # upscaling
-            if i != len(skips)-1:
-                skip = self.upscaling_layers[i+1](skip)
+            skip = self.upscaling_layers[i+1](skip)
 
             x = x + skip
 
