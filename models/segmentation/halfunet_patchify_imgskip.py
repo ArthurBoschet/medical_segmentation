@@ -22,7 +22,6 @@ class HalfUNetPatch(SegmentationModel):
             block_type=DoubleConvBlock,
             downsampling=MaxPool3dDownscale,
             upsampling=TransposeConv3dUpsample,
-            skip_mode='add',
             dropout=0,
             patch_size=3,
             channel_ouputconv=64,
