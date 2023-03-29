@@ -433,24 +433,27 @@ class ConvNextBLock(nn.Module):
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
             dropout (float): dropout added to the layer
         '''
+
+        #resize entry
+        self.resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
         #depth convolution
-        self.depth_conv = nn.Conv3d(in_channels, out_channels, kernel_size, stride=stride, padding='same', groups=in_channels)
+        self.depth_conv = nn.Conv3d(out_channels, out_channels, kernel_size, stride=stride, padding='same', groups=in_channels)
 
+        #dropout
         self.dropout = nn.Dropout(p=dropout)
 
         #normalization
         self.normalization = normalization(out_channels)
 
-        #second conv
+        #first conv
         self.conv1 = nn.Conv3d(out_channels, up_factor*out_channels, 1, stride=1)
 
         #non linearity
         self.activation = activation()
 
+        #second conv
         self.conv2 = nn.Conv3d(up_factor*out_channels, out_channels, 1, stride=1)
-
-        self.skip_resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
 
             
@@ -463,11 +466,11 @@ class ConvNextBLock(nn.Module):
         x (torch.Tensor): (N,C_out,D,H,W) output size
         '''
 
+        #resize x 
+        x = self.resize(x)
+
         #skip connection
         x_skip = x
-
-        #resise skip connection
-        x_skip = self.skip_resize(x_skip)
 
         #depth convolution
         x = self.depth_conv(x)
