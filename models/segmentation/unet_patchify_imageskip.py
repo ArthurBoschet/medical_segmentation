@@ -25,6 +25,7 @@ class UNetPatch(SegmentationModel):
             skip_mode='append',
             dropout=0,
             patch_size=3,
+            skip_conv=False,
             ):
         '''
         Implementation of a UNet model
@@ -43,6 +44,7 @@ class UNetPatch(SegmentationModel):
             dropout (float): dropout added to the layer
             patch_size (int) : patch size for patch embedding
             channel_embedding (int) : number of channel for patch embedding
+            skip_conv (bool) : do we add convolution block to skip connections?
         '''
 
         super(UNetPatch, self).__init__()
@@ -65,6 +67,22 @@ class UNetPatch(SegmentationModel):
         )
         num_channels_list =  [input_shape[0]] + num_channels_list
 
+        self.skip_conv = skip_conv
+
+        if skip_conv:
+            block_instanciator = lambda in_channels, out_channels: block_type(
+                in_channels,
+                out_channels,
+                kernel_size,
+                padding=kernel_size // 2,
+                activation=activation,
+                normalization=normalization,
+                dropout=dropout,
+            )
+            self.skip_conv = nn.ModuleList()
+            for channel in num_channels_list:
+                self.skip_conv.append(block_instanciator(channel,channel))
+
 
         # decoder
         self.decoder = ConvDecoder(
@@ -79,6 +97,8 @@ class UNetPatch(SegmentationModel):
             dropout=dropout,
         )
 
+
+
         # ouput layer (channelwise mlp) to have the desired number of classes
         self.output_layer = nn.Conv3d(
             num_channels_list[0],
@@ -90,7 +110,17 @@ class UNetPatch(SegmentationModel):
 
     def forward(self, x):
         x, skip_connections = self.encoder(x)
+        skip_connections = self.modify_skips(skip_connections)
         x = self.decoder(x, skip_connections)
         x = self.output_layer(x)
         return x
 
+
+    def modify_skips(self,skips):
+        if not self.skip_conv:
+            return skips
+        else:
+            result = []
+            for i,skip in enumerate(skips):
+                result.append(self.skip_conv[i](skip))
+            return result

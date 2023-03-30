@@ -41,8 +41,11 @@ def convert_niigz_to_numpy(input_folder):
                     data = nib.load(os.path.join(dir, file)).get_fdata()
                     if data.ndim == 3:
                         data = np.transpose(data, (2, 0, 1))
+                        # add channel dimension
+                        data = np.expand_dims(data, axis=0)
                     elif data.ndim == 4:
-                        data = np.transpose(data[:, :, :, 0], (2, 0, 1))
+                        # move channel dimension
+                        data = np.transpose(data, (3, 2, 0, 1))
                     idx_start = file.find('_')+1
                     idx_end = file.find('.nii.gz')
                     np.save(os.path.join(dir, f'{subdir[:-3]}_{file[idx_start:idx_end].zfill(3)}.npy'), data)
@@ -84,7 +87,7 @@ def normalize_3d_array(array):
 
     return array_norm
 
-def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_size=0.2):
+def prepare_dataset_for_training(dataset_folder_path, output_dataset_path):
     '''
     Prepare the dataset for training by splitting it into training and validation sets for the dataloaders
 
@@ -93,8 +96,6 @@ def prepare_dataset_for_training(dataset_folder_path, output_dataset_path, val_s
             Path to the dataset folder
         output_dataset_path: str
             Path to the output dataset folder that will be created and used for training
-        val_size: float
-            Size of the validation set
     '''
     # copy dataset from drive to virtual machine local disk
     shutil.copytree(dataset_folder_path, output_dataset_path)
