@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import numpy as np
 import nibabel as nib
@@ -35,10 +36,13 @@ def convert_niigz_to_numpy(input_folder):
     for subdir in ['imagesTr', 'labelsTr', 'imagesTs']:
         dir = os.path.join(input_folder, subdir)
         if os.path.exists(dir):
-            for file in tqdm(os.listdir(dir)):
+            for file in tqdm(sorted(os.listdir(dir))):
                 if file.endswith('.nii.gz'):
                     data = nib.load(os.path.join(dir, file)).get_fdata()
-                    data = np.transpose(data, (2, 0, 1))
+                    if data.ndim == 3:
+                        data = np.transpose(data, (2, 0, 1))
+                    elif data.ndim == 4:
+                        data = np.transpose(data[:, :, :, 0], (2, 0, 1))
                     idx_start = file.find('_')+1
                     idx_end = file.find('.nii.gz')
                     np.save(os.path.join(dir, f'{subdir[:-3]}_{file[idx_start:idx_end].zfill(3)}.npy'), data)
@@ -160,3 +164,24 @@ def reconstruct_affine_matrix(header_file_path):
                        [0, 0, 0, 1]])
     
     return affine
+
+
+def get_original_shape(image_file_path):
+    '''
+    Get the original shape of a nifti file.
+
+    Args:
+        image_file_path (str):
+            Path to the nifti file
+
+    Returns:
+        original_shape (tuple):
+            Original shape of the image
+    '''
+    # load the header
+    header = nib.load(image_file_path).header
+
+    # original shape
+    original_shape = header.get_data_shape()
+
+    return original_shape
