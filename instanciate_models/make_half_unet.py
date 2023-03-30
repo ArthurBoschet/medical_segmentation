@@ -41,8 +41,8 @@ def make_half_unet(dropout):
                       downsampling=downsampling, 
                       upsampling=upsampling, 
                       dropout=dropout,
-                      channel_ouputconv=64,
-                      num_outputconv=2,
+                      channel_ouputconv=32,
+                      num_outputconv=1,
                       )
     
     return unet_model.to(device)
