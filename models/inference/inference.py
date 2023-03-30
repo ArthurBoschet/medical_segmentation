@@ -35,8 +35,14 @@ def model_inference(model,
     timestamp_str = current_time.strftime("%Y_%m_%d-%H_%M_%S")
 
     task_name_dic = {
+        "Task01_BrainTumour": "brats",
         "Task02_Heart": "la",
+        "Task03_Liver": "liver",
+        "Task04_Hippocampus": "hippocampus",
+        "Task05_Prostate": "prostate",
+        "Task06_Lung": "lung",
         "Task07_Pancreas": "pancreas",
+        "Task08_HepaticVessel": "hepaticvessel",
         "Task09_Spleen": "spleen",
         "Task10_Colon": "colon",
     }
@@ -54,7 +60,7 @@ def model_inference(model,
     with torch.no_grad():
         for i, (input, idx) in enumerate(zip(test_dataloader, output_filenames_idx)):
             output = model.predict(input.to(device))
-            label = output[0][0].cpu().numpy().astype(np.int16)
+            label = output[0][0].cpu().numpy().astype(np.int8)
             header_file_path = os.path.join(header_path, header_filenames[i])
             affine_matrix = reconstruct_affine_matrix(header_file_path)
             save_nifti(label, affine_matrix, os.path.join(output_folder, f"{task_name_dic[dataset_name]}_{idx}.nii.gz"))
