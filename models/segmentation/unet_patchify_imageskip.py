@@ -44,6 +44,7 @@ class UNetPatch(SegmentationModel):
             dropout (float): dropout added to the layer
             patch_size (int) : patch size for patch embedding
             channel_embedding (int) : number of channel for patch embedding
+            skip_conv (bool) : do we add convolution block to skip connections?
         '''
 
         super(UNetPatch, self).__init__()
