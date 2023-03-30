@@ -42,8 +42,8 @@ def make_patchify_halfunet(dropout):
                       upsampling=upsampling, 
                       dropout=dropout,
                       patch_size=2,
-                      channel_ouputconv=64,
-                      num_outputconv=2,
+                      channel_ouputconv=32,
+                      num_outputconv=1,
                       )
     
     return unet_model.to(device)
