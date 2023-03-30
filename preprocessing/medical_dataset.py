@@ -81,15 +81,12 @@ class MedicalImageDataset(Dataset):
 
         # apply normalization if necessary
         if self.normalize:
-            image = normalize_3d_array(image)
+            for c in range(image.shape[0]):
+                image[c] = normalize_3d_array(image[c])
 
         # convert to torch tensors
         image = torch.from_numpy(image).float()
         label = torch.from_numpy(label)
-
-        # add channel dimension
-        image = image.unsqueeze(0)
-        label = label.unsqueeze(0)
 
         # add batch dimension
         image = image.unsqueeze(0)
