@@ -123,7 +123,7 @@ def visualize_infered_labels(test_dataloader, labels_path, alpha=0.3, figsize=(8
         # plot slice
         fig, ax = plt.subplots(1, 1, figsize=figsize)
         ax.imshow(im[slice], cmap="gray")
-        ax.imshow(label[slice], cmap="jet", alpha=alpha)
+        ax.imshow(label[:, :, slice], cmap="jet", alpha=alpha)
         ax.set_title(f"Image and label")
 
         # show plot
