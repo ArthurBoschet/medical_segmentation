@@ -404,6 +404,89 @@ class ResConvBlockUnetr(BaseConvBlock):
         return x
 
 
+class BaseConvNextBlock(nn.Module):
+    def __init__(
+            self,
+            channels,  
+            kernel_size, 
+            stride=1, 
+            activation=nn.GELU, 
+            normalization=nn.BatchNorm3d,
+            dropout=0,
+            up_factor=3,
+            ):
+        super(BaseConvNextBlock, self).__init__()
+        '''
+        Base Block inspired by the ConvNext paper.
+        Inspired by https://arxiv.org/abs/2201.03545
+        Parameters:
+            in_channels (int): Number of channels in the input image
+            out_channels (int): Number of channels produced by the convolution
+            kernel_size (int or tuple): Size of the convolving kernel
+            stride (int or tuple, optional): Stride of the convolution. Default: 1
+            padding (int, tuple or str, optional): Padding added to all six sides of the input. Default: 0
+            dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
+            activation (def None -> torch.nn.Module): non linear activation used by the block
+            normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
+        '''
+        #depth convolution
+        self.depth_conv = nn.Conv3d(channels, channels, kernel_size, stride=stride, padding='same', groups=channels)
+
+        #dropout
+        self.dropout = nn.Dropout(p=dropout)
+
+        #normalization
+        self.normalization = normalization(channels)
+
+        #first conv
+        self.conv1 = nn.Conv3d(channels, up_factor*channels, 1, stride=1)
+
+        #non linearity
+        self.activation = activation()
+
+        #second conv
+        self.conv2 = nn.Conv3d(up_factor*channels, channels, 1, stride=1)
+        
+
+            
+    def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C,D,H,W) input size
+
+        Returns:
+        x (torch.Tensor): (N,C,D,H,W) output size
+        '''
+
+        #skip connection
+        x_skip = x
+
+        #depth convolution
+        x = self.depth_conv(x)
+
+        #dropout
+        x = self.dropout(x)
+
+        #normalize
+        x = self.normalization(x)
+
+        #conv 1
+        x = self.conv1(x)
+
+        #activation
+        x = self.activation(x)
+
+        #conv 2
+        x = self.conv2(x)
+
+        #skip connection
+        x = x + x_skip
+        
+        return x
+
+
+
 class ConvNextBLock(nn.Module):
     def __init__(
             self,
@@ -437,23 +520,16 @@ class ConvNextBLock(nn.Module):
         #resize entry
         self.resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
-        #depth convolution
-        self.depth_conv = nn.Conv3d(out_channels, out_channels, kernel_size, stride=stride, padding='same', groups=out_channels)
-
-        #dropout
-        self.dropout = nn.Dropout(p=dropout)
-
-        #normalization
-        self.normalization = normalization(out_channels)
-
-        #first conv
-        self.conv1 = nn.Conv3d(out_channels, up_factor*out_channels, 1, stride=1)
-
-        #non linearity
-        self.activation = activation()
-
-        #second conv
-        self.conv2 = nn.Conv3d(up_factor*out_channels, out_channels, 1, stride=1)
+        self.convnext = BaseConvNextBlock(
+                            self,
+                            out_channels,  
+                            kernel_size, 
+                            stride=stride, 
+                            activation=activation, 
+                            normalization=normalization,
+                            dropout=dropout,
+                            up_factor=up_factor,
+                        )
         
 
             
@@ -469,28 +545,85 @@ class ConvNextBLock(nn.Module):
         #resize x 
         x = self.resize(x)
 
-        #skip connection
-        x_skip = x
+        #convnext block
+        x = self.convnext(x)
+        
+        return x
+    
 
-        #depth convolution
-        x = self.depth_conv(x)
+class DoubleConvNextBLock(nn.Module):
+    def __init__(
+            self,
+            in_channels, 
+            out_channels, 
+            kernel_size, 
+            stride=1, 
+            padding=0, 
+            dilation=1,  
+            activation=nn.GELU, 
+            normalization=nn.BatchNorm3d,
+            dropout=0,
+            up_factor=3,
+            ):
+        super(ConvNextBLock, self).__init__()
+        '''
+        Block inspired by the ConvNext paper.
+        Inspired by https://arxiv.org/abs/2201.03545
+        Parameters:
+            in_channels (int): Number of channels in the input image
+            out_channels (int): Number of channels produced by the convolution
+            kernel_size (int or tuple): Size of the convolving kernel
+            stride (int or tuple, optional): Stride of the convolution. Default: 1
+            padding (int, tuple or str, optional): Padding added to all six sides of the input. Default: 0
+            dilation (int or tuple, optional): Spacing between kernel elements. Default: 1
+            activation (def None -> torch.nn.Module): non linear activation used by the block
+            normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
+            dropout (float): dropout added to the layer
+        '''
 
-        #dropout
-        x = self.dropout(x)
+        #resize entry
+        self.resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
+        
+        self.convnext1 = BaseConvNextBlock(
+                            self,
+                            out_channels,  
+                            kernel_size, 
+                            stride=stride, 
+                            activation=activation, 
+                            normalization=normalization,
+                            dropout=dropout,
+                            up_factor=up_factor,
+                        )
+        
+        self.convnext2 = BaseConvNextBlock(
+                            self,
+                            out_channels,  
+                            kernel_size, 
+                            stride=stride, 
+                            activation=activation, 
+                            normalization=normalization,
+                            dropout=dropout,
+                            up_factor=up_factor,
+                        )
+        
 
-        #normalize
-        x = self.normalization(x)
+            
+    def forward(self, x):
+        '''
+        Parameters:
+        x (torch.Tensor): (N,C_in,D,H,W) input size
 
-        #conv 1
-        x = self.conv1(x)
+        Returns:
+        x (torch.Tensor): (N,C_out,D,H,W) output size
+        '''
 
-        #activation
-        x = self.activation(x)
+        #resize x 
+        x = self.resize(x)
 
-        #conv 2
-        x = self.conv2(x)
+        #convnext block
+        x = self.convnext1(x)
 
-        #skip connection
-        x = x + x_skip
+        #convnext block
+        x = self.convnext2(x)
         
         return x
