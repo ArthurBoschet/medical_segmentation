@@ -62,7 +62,7 @@ class ConvHalfDecoder(nn.Module):
         for c_out, skip_shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
 
             # we first do upscaling
-            upscale_block = upsampling(prev_shape, final_shape, c_in, channel_ouputconv)
+            upscale_block = upsampling(prev_shape, skip_shape, c_in, channel_ouputconv)
 
             # update values
             c_in = c_out
@@ -110,9 +110,9 @@ class ConvHalfDecoder(nn.Module):
         # iterate over the number of blocks
         for i, skip in enumerate(skips[:]):
 
-            skip = self.upscaling_layers[i+1](skip)
-
             x = x + skip
+
+            x = self.upscaling_layers[i+1](x)
 
         for layer in self.conv_blocks:
             x = layer(x)
