@@ -17,10 +17,9 @@ class ConvHalfDecoder(nn.Module):
                  normalization=nn.BatchNorm3d,
                  block_type=DoubleConvBlock,
                  upsampling=TransposeConv3dUpsample,
-                 skip_mode='add',
                  dropout=0,
-                 channel_ouputconv = 64,
-                 num_outputconv = 2
+                 channel_ouputconv=64,
+                 num_outputconv=2
                  ):
         '''
         Convolutional decoder for UNet model. We assume that every convolution is a same convolution with no dilation.
@@ -32,8 +31,9 @@ class ConvHalfDecoder(nn.Module):
             normalization (def int -> torch.nn.modules.batchnorm._NormBase): normalization
             block_type (blocks.conv_blocks.BaseConvBlock): one the conv blocks inheriting from the BaseConvBlock class
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
-            skip_mode (str): one of 'append' | 'add' refers to how the skip connection is added back to the decoder path
             dropout (float): dropout added to the layer
+            channel_ouputconv (int): number of channel at input of convolutionnal layer of the decoder
+            num_outputconv (int) : number of convolutional layer at the end of the decoder
         '''
         super(ConvHalfDecoder, self).__init__()
 
@@ -45,12 +45,7 @@ class ConvHalfDecoder(nn.Module):
 
         # reverse the order of encoder shapes
         self.encoder_shapes = encoder_shapes[::-1]
-        assert len(
-            self.encoder_shapes) == self.num_blocks + 1, "the number of blocks plus 1 must be the same as length of the encoder shapes (one encoder shape per block)"
-
-        # skip connections parameters
-        self.skip_mode = skip_mode
-
+        assert len(self.encoder_shapes) == self.num_blocks + 1, "the number of blocks plus 1 must be the same as length of the encoder shapes (one encoder shape per block)"
 
         # conv parameters for same convolution
         self.kernel_size = kernel_size
@@ -64,11 +59,10 @@ class ConvHalfDecoder(nn.Module):
         c_in = prev_shape[1]
 
         final_shape = self.encoder_shapes[-1]
-        final_c = self.num_channels_list[-1]
         for c_out, skip_shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
 
             # we first do upscaling
-            upscale_block = upsampling(prev_shape, final_shape, c_in, final_c)
+            upscale_block = upsampling(prev_shape, final_shape, c_in, channel_ouputconv)
 
             # update values
             c_in = c_out
@@ -76,6 +70,9 @@ class ConvHalfDecoder(nn.Module):
 
             # upsampling added
             self.upscaling_layers.append(upscale_block)
+
+        #resize the channels of the first skip connection
+        self.upscaling_layers.append(nn.Conv3d(self.encoder_shapes[-1][1], channel_ouputconv, 1, stride=1))
 
         self.conv_blocks = nn.ModuleList()
         self.block_instanciator = lambda in_channels, out_channels: block_type(
@@ -88,19 +85,11 @@ class ConvHalfDecoder(nn.Module):
             dropout=dropout,
         )
 
-        c_in = final_c
-        c_out = channel_ouputconv
-        for _ in range(num_outputconv):
-            self.conv_blocks.append(self.block_instanciator(c_in, c_out))
+        for _ in range(num_outputconv-1):
+            self.conv_blocks.append(self.block_instanciator(channel_ouputconv, channel_ouputconv))
             c_in = c_out
-        self.conv_blocks.append(block_type(
-                                    c_in,
-                                   num_channels_list[-1],
-                                    1,
-                                    padding=0,
-                                    activation=activation,
-                                    normalization=normalization,
-                                    dropout=dropout))
+
+        self.conv_blocks.append(self.block_instanciator(channel_ouputconv, self.num_channels_list[-1]))
 
     def forward(self, x, skips):
         '''
@@ -121,35 +110,12 @@ class ConvHalfDecoder(nn.Module):
         # iterate over the number of blocks
         for i, skip in enumerate(skips[:]):
 
-            # upscaling
-            if i != len(skips)-1:
-                skip = self.upscaling_layers[i+1](skip)
+            skip = self.upscaling_layers[i+1](skip)
 
-
-            # add or append mode
-            if self.skip_mode == 'append':
-                x = torch.cat([skip, x], dim=1)
-            elif self.skip_mode == 'add':
-                x = x + skip
-            else:
-                raise NotImplementedError(f"{self.skip_mode} has not been implemented")
+            x = x + skip
 
         for layer in self.conv_blocks:
             x = layer(x)
 
         return x
-
-    def compute_output_dimensions(self):
-        '''
-        computes the dimensions at the end of each convolutional block
-        Returns:
-            dimensions (List[Tuple]): dimension at the end of each convolutional block (first ones are skip connections while the last one is output of encoder)
-        '''
-        dimensions = []
-        for channel, shape in zip(self.num_channels_list, self.encoder_shapes[1:]):
-            dim = list(shape)
-            dim[1] = channel
-            dimensions.append(tuple(dim))
-
-        return dimensions
 
