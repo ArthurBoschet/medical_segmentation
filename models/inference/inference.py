@@ -60,7 +60,7 @@ def model_inference(model,
     with torch.no_grad():
         for i, (input, idx) in enumerate(zip(test_dataloader, output_filenames_idx)):
             header_file_path = os.path.join(header_path, header_filenames[i])
-            output = model.predict(input.to(device))
+            output = model.predict(input.to(device)).float()
             resize = get_original_shape(header_file_path)
             output = torch.nn.functional.interpolate(output, size=(resize[2], resize[0], resize[1]), mode='trilinear')
             output = torch.round(output)

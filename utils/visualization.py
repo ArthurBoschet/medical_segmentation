@@ -112,7 +112,7 @@ def visualize_infered_labels(test_dataloader, labels_path, alpha=0.3, figsize=(8
     filenames = sorted(os.listdir(labels_path))
     @interact
     def plot_slice(image=(1, len(test_dataloader.dataset)),
-                   slice=(1, test_dataloader.dataset[0][0][0].numpy().shape[0]),
+                   slice=(1, test_dataloader.dataset[0][0][0].numpy().shape[2]),
                    ):
         # get image and label
         im = test_dataloader.dataset[image][0].numpy()
