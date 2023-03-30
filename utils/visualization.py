@@ -59,15 +59,13 @@ def visualize_attention(attention_weights_avg, figsize=(15,15), fraction=0.02, p
         plt.show()
 
 
-def visualize_dataloaders_overlap(dataloader, cmap='gray' , alpha = 0.3, figsize=(8, 8)):
+def visualize_dataloaders_overlap(dataloader, alpha=0.3, figsize=(8, 8)):
     '''
     shows a visualization of a slice of an image and its label from a dataloader
 
     Args:
         dataloader: torch.utils.data.DataLoader
             dataloader to visualize
-        cmap: str
-            str for the style of cmap of the label image
         alpha: float
             % of  oppacity for the label
         figsize: tuple
@@ -203,6 +201,49 @@ def plot_seaborn_fold_wise(plot_type, df_baseline, dfs_compared, metric, model_n
     plt.ylabel(y_axis)
     plt.title(f"Fold-wise difference with UNet baseline on {y_axis}")
     # plt.rc('font', size=14)
+    plt.grid()
+    if save_path is not None:
+        plt.savefig(save_path)
+    if show:
+        plt.show()
+    
+    return plt
+
+
+def plot_scatter_relations(df, variable, metric, xlabel, ylabel, figsize=(10, 5), show=False, save_path=None):
+    """
+    Plot the scatter plot of a variable against a metric.
+
+    Args:
+        df (pandas.DataFrame):
+            The dataframe containing the metric and the variable.
+        variable (str):
+            The variable to plot.
+        metric (str):
+            The metric to plot.
+        figsize (tuple):
+            The figure size.
+        show (bool):
+            Whether to show the plot.
+        save_path (str):
+            The path to save the plot.
+            If None, the plot is not saved.
+
+    Returns:
+        matplotlib.pyplot:
+            The plot object.
+    """
+    assert len(df[metric].values) == len(df[variable].values)
+
+    plt.figure(figsize=figsize)
+    df = df.sort_values(by=[variable])
+    for i, txt in enumerate(df.index):
+        plt.scatter(df[variable].values[i], df[metric].values[i], marker='x', label=txt)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(f"Relations between {xlabel} and {ylabel}")
+    # plt.rc('font', size=14)
+    plt.legend()
     plt.grid()
     if save_path is not None:
         plt.savefig(save_path)
