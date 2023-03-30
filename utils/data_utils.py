@@ -39,8 +39,9 @@ def convert_niigz_to_numpy(input_folder):
                 if file.endswith('.nii.gz'):
                     data = nib.load(os.path.join(dir, file)).get_fdata()
                     data = np.transpose(data, (2, 0, 1))
-                    idx = file.find('_')+1
-                    np.save(os.path.join(dir, f'{subdir[:-3]}_{file[idx:idx+3]}.npy'), data)
+                    idx_start = file.find('_')+1
+                    idx_end = file.find('.nii.gz')
+                    np.save(os.path.join(dir, f'{subdir[:-3]}_{file[idx_start:idx_end].zfill(3)}.npy'), data)
                     os.remove(os.path.join(dir, file))
 
 def convert_to_numpy(input_folder):
