@@ -1,5 +1,6 @@
 import numpy as np
 import seaborn as sns
+import nibabel as nib
 import pandas as pd
 import matplotlib.pyplot as plt
 from ipywidgets import interact
@@ -79,6 +80,42 @@ def visualize_dataloaders_overlap(dataloader, alpha=0.3, figsize=(8, 8)):
         # get image and label
         im = dataloader.dataset[image][0][0].numpy()
         label = dataloader.dataset[image][1][0].numpy()
+        if slice > im.shape[0] - 1:
+            slice = im.shape[0] - 1
+
+        # plot slice
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+        ax.imshow(im[slice], cmap="gray")
+        ax.imshow(label[slice], cmap="jet", alpha=alpha)
+        ax.set_title(f"Image and label")
+
+        # show plot
+        plt.show()
+
+
+def visualize_infered_labels(test_dataloader, labels_path, alpha=0.3, figsize=(8, 8)):
+    '''
+    shows a visualization of a slice of an image and its infered label from the test dataloader
+
+    Args:
+        test_dataloader: torch.utils.data.DataLoader
+            test_dataloader to visualize images from
+        labels_path: str
+            path to the infered labels
+        alpha: float
+            % of  oppacity for the label
+        figsize: tuple
+            size of the figure
+    '''
+
+    filenames = sorted(os.listdir(labels_path))
+    @interact
+    def plot_slice(image=(1, len(test_dataloader.dataset)),
+                   slice=(1, test_dataloader.dataset[0][0][0].numpy().shape[0]),
+                   ):
+        # get image and label
+        im = test_dataloader.dataset[image][0].numpy()
+        label = nib.load(os.path.join(labels_path, filenames[image])).get_fdata()
         if slice > im.shape[0] - 1:
             slice = im.shape[0] - 1
 
