@@ -94,4 +94,3 @@ class UNetPatch(SegmentationModel):
         x = self.output_layer(x)
         return x
 
-

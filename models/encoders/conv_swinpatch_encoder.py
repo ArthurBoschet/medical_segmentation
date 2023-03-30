@@ -20,7 +20,7 @@ class ConvPatchEncoder(nn.Module):
                  downsampling=MaxPool3dDownscale,
                  downscale_last=False,
                  dropout=0,
-                 patch_size = 3,
+                 patch_size=3,
                  ):
         '''
         Convolutional encoder for UNet model. We assume that every convolution is a same convolution with no dilation.
@@ -83,5 +83,7 @@ class ConvPatchEncoder(nn.Module):
         dim = [self.input_shape]
         dim_encodor = self.conv_encoder.compute_output_dimensions()
         return dim +dim_encodor
+
+
 
 
