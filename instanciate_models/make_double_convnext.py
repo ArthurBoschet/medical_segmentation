@@ -5,7 +5,7 @@ from models.blocks.downsampling import MaxPool3dDownscale
 from models.blocks.upsampling import TransposeConv3dUpsample
 from models.segmentation.unet import UNet
 
-def make_couble_convnext(dropout):
+def make_double_convnext(dropout):
     '''
     Function that instanciates a unet baseline model
     Parameters:
