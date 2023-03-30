@@ -521,7 +521,6 @@ class ConvNextBLock(nn.Module):
         self.resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
         self.convnext = BaseConvNextBlock(
-                            self,
                             out_channels,  
                             kernel_size, 
                             stride=stride, 
@@ -565,7 +564,7 @@ class DoubleConvNextBLock(nn.Module):
             dropout=0,
             up_factor=3,
             ):
-        super(ConvNextBLock, self).__init__()
+        super(DoubleConvNextBLock, self).__init__()
         '''
         Block inspired by the ConvNext paper.
         Inspired by https://arxiv.org/abs/2201.03545
@@ -585,7 +584,6 @@ class DoubleConvNextBLock(nn.Module):
         self.resize = nn.Conv3d(in_channels, out_channels, 1, stride=1)
         
         self.convnext1 = BaseConvNextBlock(
-                            self,
                             out_channels,  
                             kernel_size, 
                             stride=stride, 
@@ -596,7 +594,6 @@ class DoubleConvNextBLock(nn.Module):
                         )
         
         self.convnext2 = BaseConvNextBlock(
-                            self,
                             out_channels,  
                             kernel_size, 
                             stride=stride, 
