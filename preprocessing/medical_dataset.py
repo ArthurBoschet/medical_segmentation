@@ -117,11 +117,8 @@ class MedicalImageDataset(Dataset):
             image = subject.image.data
             label = subject.label.data
 
-        # round label to 0 or 1
+        # round label to int values
         label = torch.round(label).long()
-
-        # replace -1 with 0 if any
-        label[label == -1] = 0
 
         return image, label
 

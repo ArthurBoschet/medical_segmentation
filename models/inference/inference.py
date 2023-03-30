@@ -5,7 +5,7 @@ import nibabel as nib
 import torch
 import wandb
 
-from utils.data_utils import reconstruct_affine_matrix, save_nifti
+from utils.data_utils import reconstruct_affine_matrix, save_nifti, get_original_shape
 
 
 def model_inference(model,
@@ -35,7 +35,7 @@ def model_inference(model,
     timestamp_str = current_time.strftime("%Y_%m_%d-%H_%M_%S")
 
     task_name_dic = {
-        "Task01_BrainTumour": "brats",
+        "Task01_BrainTumour": "BRATS",
         "Task02_Heart": "la",
         "Task03_Liver": "liver",
         "Task04_Hippocampus": "hippocampus",
@@ -59,9 +59,13 @@ def model_inference(model,
     model.eval()
     with torch.no_grad():
         for i, (input, idx) in enumerate(zip(test_dataloader, output_filenames_idx)):
-            output = model.predict(input.to(device))
-            label = output[0][0].cpu().numpy().astype(np.int8)
             header_file_path = os.path.join(header_path, header_filenames[i])
+            output = model.predict(input.to(device)).float()
+            resize = get_original_shape(header_file_path)
+            output = torch.nn.functional.interpolate(output, size=(resize[2], resize[0], resize[1]), mode='trilinear')
+            output = torch.round(output)
+            label = output[0][0].cpu().numpy().astype(np.int8)
+            label = np.transpose(label, (1, 2, 0))
             affine_matrix = reconstruct_affine_matrix(header_file_path)
             save_nifti(label, affine_matrix, os.path.join(output_folder, f"{task_name_dic[dataset_name]}_{idx}.nii.gz"))
 
