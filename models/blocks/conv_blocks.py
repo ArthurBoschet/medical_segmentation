@@ -565,7 +565,7 @@ class DoubleConvNextBLock(nn.Module):
             dropout=0,
             up_factor=3,
             ):
-        super(ConvNextBLock, self).__init__()
+        super(DoubleConvNextBLock, self).__init__()
         '''
         Block inspired by the ConvNext paper.
         Inspired by https://arxiv.org/abs/2201.03545
