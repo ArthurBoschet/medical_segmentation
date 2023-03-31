@@ -276,6 +276,7 @@ def plot_scatter_relations(df, variable, metric, xlabel, ylabel, figsize=(10, 5)
     """
     assert len(df[metric].values) == len(df[variable].values)
 
+    markers_list = ["x", "s", "v", "o", "*", "+", "D", "p", "2", "<", ">"]
     plt.figure(figsize=figsize)
     df = df.sort_values(by=[variable])
     for i, txt in enumerate(df.index):
@@ -285,6 +286,7 @@ def plot_scatter_relations(df, variable, metric, xlabel, ylabel, figsize=(10, 5)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(f"Relations between {xlabel} and {ylabel}")
+    plt.xscale('log')
     # plt.rc('font', size=14)
     # plt.legend()
     plt.grid()
