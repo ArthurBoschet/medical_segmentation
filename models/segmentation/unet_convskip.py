@@ -7,7 +7,7 @@ from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
 from blocks.downsampling import MaxPool3dDownscale, AvgPool3dDownscale
 from blocks.upsampling import InterpolateUpsample, TransposeConv3dUpsample
 
-class UNet(SegmentationModel):
+class UNetConvSkip(SegmentationModel):
     def __init__(
             self, 
             input_shape, 
@@ -38,6 +38,7 @@ class UNet(SegmentationModel):
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
             skip_mode (str): one of 'append' | 'add' refers to how the skip connection is added back to the decoder path
             dropout (float): dropout added to the layer
+             skip_leak (bool) : do we add convolution block to skip connections?
         '''
         super(UNet, self).__init__()
         
@@ -54,6 +55,18 @@ class UNet(SegmentationModel):
                                 downscale_last=False,
                                 dropout=dropout,
                             )
+
+        num_channels_list =  [input_shape[0]] + num_channels_list
+
+        self.modify_skips = ConvSkipBloc(
+            num_channels_list=num_channels_list,
+            kernel_size=kernel_size,
+            activation=activation,
+            normalization=normalization,
+            block_type=block_type,
+            dropout=dropout,
+            skip_leak=skip_leak
+        )
         
         #decoder
         self.decoder = ConvDecoder(
