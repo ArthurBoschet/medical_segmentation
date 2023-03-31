@@ -5,13 +5,13 @@ import nibabel as nib
 import torch
 import wandb
 
-from utils.data_utils import reconstruct_affine_matrix, save_nifti, get_original_shape
+from utils.data_utils import save_nifti, get_original_shape
 
 
 def model_inference(model,
                     test_dataloader,
+                    dataset_dir,
                     dataset_name,
-                    original_dataset_dir,
                     output_folder,
                     output_filenames_idx):
     '''
@@ -22,10 +22,10 @@ def model_inference(model,
             Model to use for inference
         test_dataloader: torch.utils.data.DataLoader
             Dataloader for the test set
+        dataset_dir: str
+            Path to the dataset folder
         dataset_name: str
             Name of the dataset
-        original_dataset_dir: str
-            Path to the original dataset
         output_folder: str
             Path to the folder where to save the output
         output_filenames_idx: list(int)
@@ -51,23 +51,20 @@ def model_inference(model,
         os.makedirs(os.path.join(output_folder, timestamp_str))
     output_folder = os.path.join(output_folder, timestamp_str)
 
-    header_path = os.path.join(original_dataset_dir, dataset_name, "labelsTr")
-    header_filenames = sorted(os.listdir(header_path))
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    test_folder_path = os.path.join(dataset_dir, dataset_name, "test")
+    filenames = sorted(os.listdir(test_folder_path))
 
     model.eval()
     with torch.no_grad():
         for i, (input, idx) in enumerate(zip(test_dataloader, output_filenames_idx)):
-            header_file_path = os.path.join(header_path, header_filenames[i])
+            resize = np.load(os.path.join(os.path.join(test_folder_path, filenames[i]))).shape
             output = model.predict(input.to(device)).float()
-            resize = get_original_shape(header_file_path)
-            output = torch.nn.functional.interpolate(output, size=(resize[2], resize[0], resize[1]), mode='trilinear')
+            output = torch.nn.functional.interpolate(output, size=(resize), mode='trilinear')
             output = torch.round(output)
             label = output[0][0].cpu().numpy().astype(np.int8)
             label = np.transpose(label, (1, 2, 0))
-            affine_matrix = reconstruct_affine_matrix(header_file_path)
-            save_nifti(label, affine_matrix, os.path.join(output_folder, f"{task_name_dic[dataset_name]}_{idx}.nii.gz"))
+            save_nifti(label, affine=np.eye(4), filename=os.path.join(output_folder, f"{task_name_dic[dataset_name]}_{idx}.nii.gz"))
 
 
 def download_model_wandb(network, username, project_name, artifact_name, artifact_version):

@@ -112,18 +112,21 @@ def visualize_infered_labels(test_dataloader, labels_path, alpha=0.3, figsize=(8
     filenames = sorted(os.listdir(labels_path))
     @interact
     def plot_slice(image=(1, len(test_dataloader.dataset)),
-                   slice=(1, test_dataloader.dataset[0][0].numpy().shape[0]),
+                   s=(1, test_dataloader.dataset[0][0].numpy().shape[0]),
                    ):
         # get image and label
-        im = test_dataloader.dataset[image][0].numpy()
-        label = nib.load(os.path.join(labels_path, filenames[image])).get_fdata()
-        if slice > im.shape[0] - 1:
-            slice = im.shape[0] - 1
+        im = test_dataloader.dataset[image-1][0].numpy()
+        label = nib.load(os.path.join(labels_path, filenames[image-1])).get_fdata()
+        label = np.transpose(label, (2, 0, 1))
+        print("image shape:", im.shape)
+        print("label shape:", label.shape)
+        if s > im.shape[0] - 1:
+            s = im.shape[0] - 1
 
         # plot slice
         fig, ax = plt.subplots(1, 1, figsize=figsize)
-        ax.imshow(im[slice], cmap="gray")
-        ax.imshow(label[slice], cmap="jet", alpha=alpha)
+        ax.imshow(im[s], cmap="gray")
+        ax.imshow(label[s], cmap="jet", alpha=alpha)
         ax.set_title(f"Image and label")
 
         # show plot
