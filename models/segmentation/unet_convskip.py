@@ -1,6 +1,7 @@
 import torch.nn as nn 
 
 from segmentation.segmentation import SegmentationModel
+from blocks.conv_skip_bloc import ConvSkipBloc
 from encoders.conv_encoder import ConvEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
@@ -22,6 +23,7 @@ class UNetConvSkip(SegmentationModel):
             upsampling=TransposeConv3dUpsample,
             skip_mode='append',
             dropout=0,
+            skip_leak=False
         ):
         '''
         Implementation of a UNet model
@@ -38,9 +40,9 @@ class UNetConvSkip(SegmentationModel):
             upsampling (blocks.conv.downsampling.Downscale): upsampling scheme
             skip_mode (str): one of 'append' | 'add' refers to how the skip connection is added back to the decoder path
             dropout (float): dropout added to the layer
-             skip_leak (bool) : do we add convolution block to skip connections?
+            skip_leak (bool) : do we have a shortcut at skip convolution?
         '''
-        super(UNet, self).__init__()
+        super(UNetConvSkip, self).__init__()
         
         #encoder
         self.encoder = ConvEncoder(
@@ -56,7 +58,6 @@ class UNetConvSkip(SegmentationModel):
                                 dropout=dropout,
                             )
 
-        num_channels_list =  [input_shape[0]] + num_channels_list
 
         self.modify_skips = ConvSkipBloc(
             num_channels_list=num_channels_list,
@@ -93,9 +94,8 @@ class UNetConvSkip(SegmentationModel):
     
     def forward(self, x):
         x, skip_connections = self.encoder(x)
+        skip_connections = self.modify_skips(skip_connections)
         x = self.decoder(x, skip_connections)
         x = self.output_layer(x)
         return x
-
-        
         
