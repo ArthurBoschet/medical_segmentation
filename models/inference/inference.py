@@ -5,7 +5,7 @@ import nibabel as nib
 import torch
 import wandb
 
-from utils.data_utils import save_nifti, get_original_shape
+from utils.data_utils import save_nifti
 
 
 def model_inference(model,

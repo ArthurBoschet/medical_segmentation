@@ -5,7 +5,7 @@ from models.blocks.downsampling import MaxPool3dDownscale
 from models.blocks.upsampling import TransposeConv3dUpsample
 from models.segmentation.trans_unet import TransUNet
 
-def make_unet_baseline(dropout):
+def make_trans_unet(dropout):
     '''
     Function that instanciates a unet baseline model
     Parameters:
@@ -48,7 +48,6 @@ def make_unet_baseline(dropout):
                       activation_attention_embedding=nn.Identity,
                       normalization_attention=nn.BatchNorm3d,
                       upscale_attention=TransposeConv3dUpsample,
-                      skip_mode='append',
                       dropout_attention=0,
                       dropout=dropout)
     

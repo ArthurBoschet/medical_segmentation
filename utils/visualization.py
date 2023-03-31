@@ -163,8 +163,8 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     assert isinstance(dfs[0], list)
     assert isinstance(model_names, list)
 
-    colors = ["#377eb8", "#ff7f00", "#4daf4a", "#e41c1c"]
-    linestyles = ["solid", "dashed", "dashdot", "dotted"]
+    colors = ["#377eb8", "#ff7f00", "#4daf4a", "#e41c1c", ]
+    linestyles = ["solid", "dashed", "dashdot", "dotted", "(5, (10, 3))"]
     plt.figure(figsize=figsize)
     for i, df in enumerate(dfs):
         mean = np.mean([fold_df[metric] for fold_df in df], axis=0)
