@@ -1,9 +1,10 @@
 import torch.nn as nn
 
-from segmentation.segmentation import SegmentationModel
+from segmentation import SegmentationModel
 from encoders.conv_swinpatch_encoder import ConvPatchEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
+from blocks.conv_skip_bloc import ConvSkipBloc
 from blocks.downsampling import MaxPool3dDownscale, AvgPool3dDownscale
 from blocks.upsampling import InterpolateUpsample, TransposeConv3dUpsample
 
@@ -25,7 +26,7 @@ class UNetPatch(SegmentationModel):
             skip_mode='append',
             dropout=0,
             patch_size=3,
-            skip_conv=False,
+            skip_leak=False,
             ):
         '''
         Implementation of a UNet model
@@ -44,7 +45,7 @@ class UNetPatch(SegmentationModel):
             dropout (float): dropout added to the layer
             patch_size (int) : patch size for patch embedding
             channel_embedding (int) : number of channel for patch embedding
-            skip_conv (bool) : do we add convolution block to skip connections?
+            skip_leak (bool) : do we add convolution block to skip connections?
         '''
 
         super(UNetPatch, self).__init__()
@@ -62,27 +63,20 @@ class UNetPatch(SegmentationModel):
             downsampling=downsampling,
             downscale_last=False,
             dropout=dropout,
-            patch_size = patch_size,
-            channel_embedding = channel_embedding
+            patch_size=patch_size,
+            channel_embedding=channel_embedding
         )
         num_channels_list =  [input_shape[0]] + num_channels_list
 
-        self.skip_conv = skip_conv
-
-        if skip_conv:
-            block_instanciator = lambda in_channels, out_channels: block_type(
-                in_channels,
-                out_channels,
-                kernel_size,
-                padding=kernel_size // 2,
-                activation=activation,
-                normalization=normalization,
-                dropout=dropout,
-            )
-            self.skip_conv = nn.ModuleList()
-            for channel in num_channels_list:
-                self.skip_conv.append(block_instanciator(channel,channel))
-
+        self.modify_skips = ConvSkipBloc(
+            num_channels_list=num_channels_list,
+            kernel_size=kernel_size,
+            activation=activation,
+            normalization=normalization,
+            block_type=block_type,
+            dropout=dropout,
+            skip_leak=skip_leak
+        )
 
         # decoder
         self.decoder = ConvDecoder(
@@ -96,8 +90,6 @@ class UNetPatch(SegmentationModel):
             skip_mode=skip_mode,
             dropout=dropout,
         )
-
-
 
         # ouput layer (channelwise mlp) to have the desired number of classes
         self.output_layer = nn.Conv3d(
@@ -115,12 +107,47 @@ class UNetPatch(SegmentationModel):
         x = self.output_layer(x)
         return x
 
+import torch
+r = torch.rand((2,1,32,32,32))
+input_shape = r.shape[1:]
+num_classes = 2
+num_channels_list = [10,20,30]
+channel_embedding = 25
 
-    def modify_skips(self,skips):
-        if not self.skip_conv:
-            return skips
-        else:
-            result = []
-            for i,skip in enumerate(skips):
-                result.append(self.skip_conv[i](skip))
-            return result
+
+model = UNetPatch(
+            input_shape,
+            num_classes,
+            num_channels_list,
+            channel_embedding,
+            kernel_size=3,
+            scale_factor=2,
+            activation=nn.ReLU,
+            normalization=nn.BatchNorm3d,
+            block_type=DoubleConvBlock,
+            downsampling=MaxPool3dDownscale,
+            upsampling=TransposeConv3dUpsample,
+            skip_mode='append',
+            dropout=0,
+            patch_size=3,
+            skip_leak=False,
+            )
+
+model2 = UNetPatch(
+            input_shape,
+            num_classes,
+            num_channels_list,
+            channel_embedding,
+            kernel_size=3,
+            scale_factor=2,
+            activation=nn.ReLU,
+            normalization=nn.BatchNorm3d,
+            block_type=DoubleConvBlock,
+            downsampling=MaxPool3dDownscale,
+            upsampling=TransposeConv3dUpsample,
+            skip_mode='append',
+            dropout=0,
+            patch_size=3,
+            skip_leak=True,
+            )
+
