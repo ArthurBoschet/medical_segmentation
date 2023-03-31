@@ -3,11 +3,11 @@ import torch
 from models.blocks.conv_blocks import DoubleConvBlock
 from models.blocks.downsampling import MaxPool3dDownscale
 from models.blocks.upsampling import TransposeConv3dUpsample
-from models.segmentation.unet_patchify_imageskip import UNetPatch
+from models.segmentation.trans_unet import TransUNet
 
-def make_patchify_unet(dropout):
+def make_unet_baseline(dropout):
     '''
-    Function that instanciates a half unet model
+    Function that instanciates a unet baseline model
     Parameters:
         dropout (float): dropout rate
     Returns:
@@ -17,7 +17,6 @@ def make_patchify_unet(dropout):
     num_classes = 2
     input_shape = (1, 128, 128, 128)
     num_channels_list = [32, 64, 128, 256, 380, 512]
-    channel_embedding = 32
     kernel_size = 3
     scale_factor = 2
     activation = nn.LeakyReLU
@@ -25,16 +24,16 @@ def make_patchify_unet(dropout):
     block_type = DoubleConvBlock
     downsampling = MaxPool3dDownscale
     upsampling = TransposeConv3dUpsample
+    skip_mode = "append"
 
     #torch device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"The device is {device}")
 
     # init model
-    unet_model = UNetPatch(input_shape, 
+    unet_model = TransUNet(input_shape, 
                       num_classes, 
                       num_channels_list, 
-                      channel_embedding,
                       kernel_size=kernel_size, 
                       scale_factor=scale_factor, 
                       activation=activation, 
@@ -42,8 +41,15 @@ def make_patchify_unet(dropout):
                       block_type=block_type, 
                       downsampling=downsampling, 
                       upsampling=upsampling, 
-                      dropout=dropout,
-                      patch_size=2
-                      )
+                      skip_mode=skip_mode, 
+                      patch_size_factor=8,
+                      embed_size=64, 
+                      num_heads=8,
+                      activation_attention_embedding=nn.Identity,
+                      normalization_attention=nn.BatchNorm3d,
+                      upscale_attention=TransposeConv3dUpsample,
+                      skip_mode='append',
+                      dropout_attention=0,
+                      dropout=dropout)
     
     return unet_model.to(device)

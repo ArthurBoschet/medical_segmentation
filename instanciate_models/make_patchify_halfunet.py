@@ -17,6 +17,7 @@ def make_patchify_halfunet(dropout):
     num_classes = 2
     input_shape = (1, 128, 128, 128)
     num_channels_list = [32, 64, 128, 256, 380, 512]
+    channel_embedding = 32
     kernel_size = 3
     scale_factor = 2
     activation = nn.LeakyReLU
@@ -33,6 +34,7 @@ def make_patchify_halfunet(dropout):
     unet_model = HalfUNetPatch(input_shape, 
                       num_classes, 
                       num_channels_list, 
+                      channel_embedding,
                       kernel_size=kernel_size, 
                       scale_factor=scale_factor, 
                       activation=activation, 
