@@ -167,24 +167,3 @@ def save_nifti(image, affine, filename):
     '''
     img = nib.Nifti1Image(image, affine)
     nib.save(img, filename)
-
-
-def get_original_shape(image_file_path):
-    '''
-    Get the original shape of a nifti file.
-
-    Args:
-        image_file_path (str):
-            Path to the nifti file
-
-    Returns:
-        original_shape (tuple):
-            Original shape of the image
-    '''
-    # load the header
-    header = nib.load(image_file_path).header
-
-    # original shape
-    original_shape = header.get_data_shape()
-
-    return original_shape

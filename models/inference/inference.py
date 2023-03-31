@@ -10,8 +10,8 @@ from utils.data_utils import save_nifti, get_original_shape
 
 def model_inference(model,
                     test_dataloader,
+                    dataset_dir,
                     dataset_name,
-                    original_dataset_dir,
                     output_folder,
                     output_filenames_idx):
     '''
@@ -22,10 +22,10 @@ def model_inference(model,
             Model to use for inference
         test_dataloader: torch.utils.data.DataLoader
             Dataloader for the test set
+        dataset_dir: str
+            Path to the dataset folder
         dataset_name: str
             Name of the dataset
-        original_dataset_dir: str
-            Path to the original dataset
         output_folder: str
             Path to the folder where to save the output
         output_filenames_idx: list(int)
@@ -51,18 +51,16 @@ def model_inference(model,
         os.makedirs(os.path.join(output_folder, timestamp_str))
     output_folder = os.path.join(output_folder, timestamp_str)
 
-    original_test_data_path = os.path.join(original_dataset_dir, dataset_name, "imagesTs")
-    original_filenames = sorted(os.listdir(original_test_data_path))
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    test_folder_path = os.path.join(dataset_dir, dataset_name, "test")
+    filenames = sorted(os.listdir(test_folder_path))
 
     model.eval()
     with torch.no_grad():
         for i, (input, idx) in enumerate(zip(test_dataloader, output_filenames_idx)):
-            original_file_path = os.path.join(original_test_data_path, original_filenames[i])
+            resize = np.load(os.path.join(os.path.join(test_folder_path, filenames[i]))).shape
             output = model.predict(input.to(device)).float()
-            resize = get_original_shape(original_file_path)
-            output = torch.nn.functional.interpolate(output, size=(resize[2], resize[0], resize[1]), mode='trilinear')
+            output = torch.nn.functional.interpolate(output, size=(resize), mode='trilinear')
             output = torch.round(output)
             label = output[0][0].cpu().numpy().astype(np.int8)
             label = np.transpose(label, (1, 2, 0))
