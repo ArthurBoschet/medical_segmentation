@@ -281,7 +281,7 @@ def plot_scatter_relations(df, variable, metric, xlabel, ylabel, figsize=(10, 5)
     df = df.sort_values(by=[variable])
     for i, txt in enumerate(df.index):
         # plt.scatter(df[variable].values[i], df[metric].values[i], marker='x', label=txt)
-        plt.scatter(df[variable].values[i], df[metric].values[i], marker='x')
+        plt.scatter(df[variable].values[i], df[metric].values[i], marker=markers_list[i])
         plt.annotate(txt, (df[variable].values[i], df[metric].values[i]))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
