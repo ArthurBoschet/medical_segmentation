@@ -178,7 +178,7 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     # plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
     if show:
         plt.show()
     
@@ -244,7 +244,7 @@ def plot_seaborn_fold_wise(plot_type, df_baseline, dfs_compared, metric, model_n
     # plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
     if show:
         plt.show()
     
@@ -291,7 +291,7 @@ def plot_scatter_relations(df, variable, metric, xlabel, ylabel, figsize=(10, 5)
     plt.legend()
     plt.grid()
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
     if show:
         plt.show()
     
