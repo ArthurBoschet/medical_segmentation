@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from segmentation import SegmentationModel
+from segmentation.segmentation import SegmentationModel
 from encoders.conv_swinpatch_encoder import ConvPatchEncoder
 from decoders.conv_decoder import ConvDecoder
 from blocks.conv_blocks import SingleConvBlock, DoubleConvBlock, ResConvBlock
@@ -106,48 +106,4 @@ class UNetPatch(SegmentationModel):
         x = self.decoder(x, skip_connections)
         x = self.output_layer(x)
         return x
-
-import torch
-r = torch.rand((2,1,32,32,32))
-input_shape = r.shape[1:]
-num_classes = 2
-num_channels_list = [10,20,30]
-channel_embedding = 25
-
-
-model = UNetPatch(
-            input_shape,
-            num_classes,
-            num_channels_list,
-            channel_embedding,
-            kernel_size=3,
-            scale_factor=2,
-            activation=nn.ReLU,
-            normalization=nn.BatchNorm3d,
-            block_type=DoubleConvBlock,
-            downsampling=MaxPool3dDownscale,
-            upsampling=TransposeConv3dUpsample,
-            skip_mode='append',
-            dropout=0,
-            patch_size=3,
-            skip_leak=False,
-            )
-
-model2 = UNetPatch(
-            input_shape,
-            num_classes,
-            num_channels_list,
-            channel_embedding,
-            kernel_size=3,
-            scale_factor=2,
-            activation=nn.ReLU,
-            normalization=nn.BatchNorm3d,
-            block_type=DoubleConvBlock,
-            downsampling=MaxPool3dDownscale,
-            upsampling=TransposeConv3dUpsample,
-            skip_mode='append',
-            dropout=0,
-            patch_size=3,
-            skip_leak=True,
-            )
 
