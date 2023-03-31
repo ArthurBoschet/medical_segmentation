@@ -48,7 +48,6 @@ def make_unet_baseline(dropout):
                       activation_attention_embedding=nn.Identity,
                       normalization_attention=nn.BatchNorm3d,
                       upscale_attention=TransposeConv3dUpsample,
-                      skip_mode='append',
                       dropout_attention=0,
                       dropout=dropout)
     
