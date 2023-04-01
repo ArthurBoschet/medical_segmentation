@@ -20,21 +20,25 @@ from log_wandb import log_wandb_run
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_config', required=True,
+    parser.add_argument('--model_config',
                         type=str, default='../experiments/configs/unet.json',
                         help='Path to the model config json file')
-    parser.add_argument('--dataset_path', required=True,
+    parser.add_argument('--dataset_path',
                         type=str, default='../../scratch/dataset', 
                         help='Path to the dataset folder')
-    parser.add_argument('--task_name', required=True,
+    parser.add_argument('--task_name',
                         type=str, default='Task02_Heart',
                         help='Name of the task')
+    parser.add_argument('--num_epochs',
+                        type=int, default=100,
+                        help='Number of epochs')
     
     # parse arguments
     args = parser.parse_args()
     model_config = args.model_config
     dataset_path = args.dataset_path
     task_name = args.task_name
+    num_epochs = args.num_epochs
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -112,7 +116,7 @@ if __name__ == "__main__":
                  val_dataloader, 
                  batch_size=batch_size,
                  num_classes=num_classes, 
-                 num_epochs=100, 
+                 num_epochs=num_epochs, 
                  patience=100, 
                  optimizer=optimizer, 
                  criterion=criterion, 
