@@ -3,6 +3,7 @@ sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 sys.path.append('../models')
+sys.path.append('../experiments')
 
 import os
 import json
@@ -10,6 +11,7 @@ import argparse
 
 from preprocessing.data_loader import load_test_data
 from models.inference.inference import model_inference, download_model_wandb
+from experiments.make_model import make_model
 
 
 if __name__ == "__main__":

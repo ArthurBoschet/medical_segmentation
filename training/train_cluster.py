@@ -3,6 +3,7 @@ sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 sys.path.append('../models')
+sys.path.append('../experiments')
 
 import os
 import json
@@ -13,13 +14,14 @@ from monai.losses import DiceCELoss
 
 from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_training_local
 from preprocessing.data_loader import load_data
+from experiments.make_model import make_model
 from log_wandb import log_wandb_run
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_config',
-                        type=str, required=True,
+    parser.add_argument('--model_config', required=True,
+                        type=str, default='../experiments/configs/unet.json',
                         help='Path to the model config json file')
     parser.add_argument('--dataset_path', required=True,
                         type=str, default='../../scratch/dataset', 
@@ -39,8 +41,8 @@ if __name__ == "__main__":
         model_config_json = json.load(f)
     
     # get batch size and resize from model_config_json
-    batch_size = model_config_json["batch_size"]
-    resize = model_config_json["resize"]
+    batch_size = model_config_json["training"]["batch_size"]
+    resize = model_config_json["training"]["resize"]
 
     # path to the task folder
     task_folder_path = os.path.join(dataset_path, task_name)
@@ -93,9 +95,10 @@ if __name__ == "__main__":
 
     # setup device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Device is: {device}")
 
     # instantiate model
-    model = make_model(config_name=model_config, input_shape=input_shape, num_classes=num_classes)
+    model = make_model(config=model_config, input_shape=input_shape, num_classes=num_classes)
 
     # init parameters
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-7)
@@ -109,7 +112,7 @@ if __name__ == "__main__":
                  val_dataloader, 
                  batch_size=batch_size,
                  num_classes=num_classes, 
-                 num_epochs=3, 
+                 num_epochs=100, 
                  patience=100, 
                  optimizer=optimizer, 
                  criterion=criterion, 
