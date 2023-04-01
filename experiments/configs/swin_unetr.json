@@ -1,0 +1,1 @@
+{"model": "SwinUNETR", "training": {"lr": 0.001, "weight_decay": 1e-07, "factor": 0.1, "patience": 20, "batch_size": 2, "resize": [128, 128, 128]}, "parameters": {"feature_size": 48}}
