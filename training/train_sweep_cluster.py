@@ -8,14 +8,68 @@ sys.path.append('../experiments')
 import os
 import json
 import torch
+import wandb
 import argparse
+import optuna
 
 from monai.losses import DiceCELoss
 
 from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_training_local
 from preprocessing.data_loader import load_data
 from experiments.make_model import make_model
-from log_wandb import log_wandb_run
+from train import train
+
+
+def objective(trial):
+    '''
+    Objective function for Optuna optimization
+    
+    Args:
+        trial (optuna.trial.Trial): 
+            Optuna trial object
+    '''
+    # get hyperparameters
+    lr = trial.suggest_float("lr", 1e-6, 1e-1, log=True)
+
+    # initialize wandb run
+    wandb.init(
+        project=project_name,
+        entity="enzymes",
+        mode="offline",
+        dir="/home/jaggbow/scratch/clem/logs/sweep",
+        config={"lr": lr},
+        name=f"sweep_run_{trial.number}",
+    )
+
+    # make model
+    model = make_model(model_config, input_shape=input_shape, num_classes=num_classes)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
+    criterion = DiceCELoss()
+    wandb.watch(model, log="all")
+
+    # train model
+    best_val_dice = train(
+        model=model, 
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        batch_size=batch_size,
+        num_classes=num_classes,
+        num_epochs=num_epochs, 
+        patience=num_epochs, 
+        optimizer=optimizer, 
+        scheduler=scheduler,
+        criterion=criterion, 
+        wandb_log=True,
+        segmentation_ouput=False,
+        artifact_log=False,
+    )
+
+    #terminate run
+    wandb.finish()
+
+    # return best validation dice
+    return best_val_dice["max_val_dice_1"]
 
 
 if __name__ == "__main__":
@@ -29,20 +83,24 @@ if __name__ == "__main__":
     parser.add_argument('--task_name',
                         type=str, default='Task02_Heart',
                         help='Name of the task')
+    parser.add_argument('--project_name',
+                        type=str, default='unet_sweep',
+                        help='Name of the wandb project')
     parser.add_argument('--num_epochs',
-                        type=int, default=100,
+                        type=int, default=50,
                         help='Number of epochs')
-    parser.add_argument('--lr',
-                        type=float, default=1e-3,
-                        help='Learning rate')
+    parser.add_argument('--num_trials', 
+                        type=int, default=20,
+                        help='Number of trials')
     
     # parse arguments
     args = parser.parse_args()
     model_config = args.model_config
     dataset_path = args.dataset_path
     task_name = args.task_name
+    project_name = args.project_name
     num_epochs = args.num_epochs
-    lr = args.lr
+    num_trials = args.num_trials
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -105,30 +163,17 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Device is: {device}")
 
-    # instantiate model
-    model = make_model(config=model_config, input_shape=input_shape, num_classes=num_classes)
-
-    # init parameters
+    # init constant parameters
     weight_decay = model_config_json["training"]["weight_decay"]
     patience = model_config_json["training"]["patience"]
     factor = model_config_json["training"]["factor"]
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    criterion = DiceCELoss()
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
-    run_name = f"{model.__class__.__name__}_{task_name}"
 
-    # train model
-    log_wandb_run(model, 
-                 train_dataloader, 
-                 val_dataloader, 
-                 batch_size=batch_size,
-                 num_classes=num_classes, 
-                 num_epochs=num_epochs, 
-                 patience=100, 
-                 optimizer=optimizer, 
-                 criterion=criterion, 
-                 scheduler=scheduler,
-                 segmentation_ouput=True,
-                 run_name=run_name,
-                 offline=True,
-                 wandb_dir="/home/jaggbow/scratch/clem/logs")
+    # create and run optuna study
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=num_trials)
+
+    # print best parameters
+    print("Best trial:", study.best_trial.number)
+    print("Best value:", study.best_value)
+    print("Best parameters:", study.best_params)
+    

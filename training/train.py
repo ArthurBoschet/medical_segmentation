@@ -20,6 +20,7 @@ def train(model,
           scheduler=None,
           wandb_log=False,
           segmentation_ouput=False,
+          artifact_log=True,
           ):
     ''' 
     Train a model
@@ -49,6 +50,12 @@ def train(model,
             Whether to log to wandb or not
         segmentation_ouput: bool
             Whether to log segmentation image results
+        artifact_log: bool
+            Whether to log model as artifact
+
+    Returns:
+        val_dice_max: dict
+            Dictionary of maximum validation dice scores
     '''
 
     # wandb dir run
@@ -259,10 +266,13 @@ def train(model,
     if wandb_log:
         val_dice_max = {f"max_val_dice_{i}":max(val_dice_list[i]) for i in range(num_classes)}
         wandb.log(val_dice_max)
-        artifact = wandb.Artifact(
-            model.__class__.__name__, 
-            type="model", 
-            description=f"Model after epoch {best_epoch}"
-        )
-        artifact.add_file(f"{run_dir}/best_model.pt")
-        wandb.log_artifact(artifact)
+        if artifact_log:
+            artifact = wandb.Artifact(
+                model.__class__.__name__, 
+                type="model", 
+                description=f"Model after epoch {best_epoch}"
+            )
+            artifact.add_file(f"{run_dir}/best_model.pt")
+            wandb.log_artifact(artifact)
+
+    return val_dice_max
