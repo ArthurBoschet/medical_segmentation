@@ -16,6 +16,7 @@ from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_trainin
 from preprocessing.data_loader import load_data
 from experiments.make_model import make_model
 from log_wandb import log_wandb_run
+from log_wandb_kfold import log_wandb_run_kfold
 
 
 if __name__ == "__main__":
@@ -35,6 +36,9 @@ if __name__ == "__main__":
     parser.add_argument('--lr',
                         type=float, default=1e-3,
                         help='Learning rate')
+    parser.add_argument('--k_folds',
+                        type=int, default=0,
+                        help='Number of k-folds to use for training (0 for no k-folds)')
     
     # parse arguments
     args = parser.parse_args()
@@ -43,6 +47,7 @@ if __name__ == "__main__":
     task_name = args.task_name
     num_epochs = args.num_epochs
     lr = args.lr
+    k_folds = args.k_folds
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -88,47 +93,62 @@ if __name__ == "__main__":
     normalize = True
     transform = None
 
-    # load dataloaders
-    train_dataloader, val_dataloader = load_data(task_folder_path, 
-                                                 batch_size=batch_size, 
-                                                 num_classes=num_classes, 
-                                                 shuffle=shuffle,
-                                                 normalize=normalize,
-                                                 resize=resize,
-                                                 transform=transform)
+    # check if we are training on k-folds
+    if k_folds==0:
+        # load dataloaders
+        train_dataloader, val_dataloader = load_data(task_folder_path, 
+                                                     batch_size=batch_size, 
+                                                     num_classes=num_classes, 
+                                                     shuffle=shuffle,
+                                                     normalize=normalize,
+                                                     resize=resize,
+                                                     transform=transform)
 
-    # shapes
-    input_example = train_dataloader.dataset[0][0].unsqueeze(0)
-    input_shape = tuple(list(input_example[0].shape))
+        # shapes
+        input_example = train_dataloader.dataset[0][0].unsqueeze(0)
+        input_shape = tuple(list(input_example[0].shape))
 
-    # setup device
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Device is: {device}")
+        # setup device
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print(f"Device is: {device}")
 
-    # instantiate model
-    model = make_model(config=model_config, input_shape=input_shape, num_classes=num_classes)
+        # instantiate model
+        model = make_model(config=model_config, input_shape=input_shape, num_classes=num_classes)
 
-    # init parameters
-    weight_decay = model_config_json["training"]["weight_decay"]
-    patience = model_config_json["training"]["patience"]
-    factor = model_config_json["training"]["factor"]
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    criterion = DiceCELoss()
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
-    run_name = f"{model.__class__.__name__}_{task_name}"
+        # init parameters
+        weight_decay = model_config_json["training"]["weight_decay"]
+        patience = model_config_json["training"]["patience"]
+        factor = model_config_json["training"]["factor"]
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+        criterion = DiceCELoss()
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
+        run_name = f"{model.__class__.__name__}_{task_name}"
 
-    # train model
-    log_wandb_run(model, 
-                 train_dataloader, 
-                 val_dataloader, 
-                 batch_size=batch_size,
-                 num_classes=num_classes, 
-                 num_epochs=num_epochs, 
-                 patience=100, 
-                 optimizer=optimizer, 
-                 criterion=criterion, 
-                 scheduler=scheduler,
-                 segmentation_ouput=True,
-                 run_name=run_name,
-                 offline=True,
-                 wandb_dir="/home/jaggbow/scratch/clem/logs")
+        # train model
+        log_wandb_run(model, 
+                      train_dataloader, 
+                      val_dataloader, 
+                      batch_size=batch_size,
+                      num_classes=num_classes, 
+                      num_epochs=num_epochs, 
+                      patience=100, 
+                      optimizer=optimizer, 
+                      criterion=criterion, 
+                      scheduler=scheduler,
+                      segmentation_ouput=True,
+                      run_name=run_name,
+                      offline=True,
+                      wandb_dir="/home/jaggbow/scratch/clem/logs")
+    else:
+        # train on k-folds and log results
+        log_wandb_run_kfold(model_config,
+                            task_folder_path,
+                            lr=lr,
+                            k_folds=k_folds,
+                            batch_size=batch_size,
+                            num_classes=num_classes,
+                            num_epochs=num_epochs,
+                            patience=num_epochs,
+                            segmentation_ouput=True,
+                            offline=True,
+                            wandb_dir="/home/jaggbow/scratch/clem/logs")

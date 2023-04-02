@@ -90,18 +90,19 @@ def log_wandb_run(model,
     wandb.watch(model, log="all")
 
     _ = train(model, 
-          train_dataloader, 
-          val_dataloader, 
-          batch_size,
-          num_classes,
-          num_epochs=num_epochs, 
-          patience=patience, 
-          optimizer=optimizer, 
-          criterion=criterion, 
-          scheduler=scheduler,
-          wandb_log=True,
-          segmentation_ouput=segmentation_ouput,
-          )
+              train_dataloader, 
+              val_dataloader, 
+              batch_size,
+              num_classes,
+              num_epochs=num_epochs, 
+              patience=patience, 
+              optimizer=optimizer, 
+              criterion=criterion, 
+              scheduler=scheduler,
+              wandb_log=True,
+              segmentation_ouput=segmentation_ouput,
+              artifact_log=True,
+              )
     
     #terminate run
     wandb.finish()
