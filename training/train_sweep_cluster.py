@@ -30,11 +30,11 @@ if __name__ == "__main__":
                         type=str, default='Task02_Heart',
                         help='Name of the task')
     parser.add_argument('--num_epochs',
-                        type=int, default=100,
+                        type=int, default=60,
                         help='Number of epochs')
-    parser.add_argument('--lr',
-                        type=float, default=1e-3,
-                        help='Learning rate')
+    parser.add_argument('--num_trials', 
+                        type=int, default=10,
+                        help='Number of trials')
     
     # parse arguments
     args = parser.parse_args()
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     dataset_path = args.dataset_path
     task_name = args.task_name
     num_epochs = args.num_epochs
-    lr = args.lr
+    num_trials = args.num_trials
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -105,30 +105,65 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Device is: {device}")
 
-    # instantiate model
-    model = make_model(config=model_config, input_shape=input_shape, num_classes=num_classes)
-
-    # init parameters
+    # init constant parameters
     weight_decay = model_config_json["training"]["weight_decay"]
     patience = model_config_json["training"]["patience"]
     factor = model_config_json["training"]["factor"]
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    criterion = DiceCELoss()
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
-    run_name = f"{model.__class__.__name__}_{task_name}"
 
-    # train model
-    log_wandb_run(model, 
-                 train_dataloader, 
-                 val_dataloader, 
-                 batch_size=batch_size,
-                 num_classes=num_classes, 
-                 num_epochs=num_epochs, 
-                 patience=100, 
-                 optimizer=optimizer, 
-                 criterion=criterion, 
-                 scheduler=scheduler,
-                 segmentation_ouput=True,
-                 run_name=run_name,
-                 offline=True,
-                 wandb_dir="/home/jaggbow/scratch/clem/logs")
+    # setup the sweep 
+    sweep_config = {
+        'method': 'bayes'
+    }
+
+    # the goal is to maximize the validation dice score of the foreground
+    metric = {
+        'name': 'max_val_dice_1',
+        'goal': 'maximize'   
+    }
+
+    early_terminate = {
+        'type': 'hyperband',
+        'min_iter': 30
+    }
+
+    sweep_config['early_terminate'] = early_terminate
+
+    sweep_config['metric'] = metric
+
+    # hyper parameter space
+    parameters_dict = {
+        # constant values 
+        'batch_size' : {
+            'value': 2
+        },
+        'epochs': {
+            'value': num_epochs
+        },
+        'num_classes':{
+            'value': num_classes
+        },
+        'input_shape': {
+            'value': input_shape
+        },
+        'weight_decay': {
+            'value': weight_decay
+        },
+        'patience': {
+            'value': patience
+        },
+        'lr_factor': {
+            'value': factor
+        },
+
+        # optimizer variables
+        'lr': {
+            'distribution': 'log_uniform_values',
+            'min': 1e-6,
+            'max': 1e-1
+        },
+    }
+    sweep_config['parameters'] = parameters_dict
+
+    
+
+    
