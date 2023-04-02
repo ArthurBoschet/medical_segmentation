@@ -31,6 +31,9 @@ def objective(trial):
     # get hyperparameters
     lr = trial.suggest_float("lr", 1e-6, 1e-1, log=True)
 
+    # model config name
+    model_config_name = model_config.split("/")[-1].split(".")[0]
+
     # initialize wandb run
     wandb.init(
         project=project_name,
@@ -38,7 +41,7 @@ def objective(trial):
         mode="offline",
         dir="/home/jaggbow/scratch/clem/logs/sweep",
         config={"lr": lr},
-        name=f"sweep_run_{trial.number}",
+        name=f"{model_config_name}_run_{trial.number}",
     )
 
     # make model
