@@ -8,14 +8,12 @@ sys.path.append('../experiments')
 import os
 import json
 import torch
+import wandb
 import argparse
-
-from monai.losses import DiceCELoss
 
 from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_training_local
 from preprocessing.data_loader import load_data
-from experiments.make_model import make_model
-from log_wandb import log_wandb_run
+from wandb_sweep import train_sweep
 
 
 if __name__ == "__main__":
@@ -163,7 +161,15 @@ if __name__ == "__main__":
         },
     }
     sweep_config['parameters'] = parameters_dict
-
     
+    sweep_trainer = lambda: train_sweep(
+        config=None,
+        model_config=model_config,
+        early_stop_patience=100,
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader
+    )
 
-    
+    # run the sweep
+    sweep_id = wandb.sweep(sweep_config, project="unet_colon_sweep", entity='enzymes')
+    wandb.agent(sweep_id, sweep_trainer, count=num_trials)
