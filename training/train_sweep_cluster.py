@@ -34,21 +34,48 @@ def objective(trial):
     # model config name
     model_config_name = model_config.split("/")[-1].split(".")[0]
 
+    # make model
+    model = make_model(model_config, input_shape=input_shape, num_classes=num_classes)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=scheduler_patience)
+    criterion = DiceCELoss()
+
+    # model dictionary
+    model_dic = {
+        "model_name": model.__class__.__name__,
+        "num_epochs": num_epochs,
+        "optimizer": optimizer.__class__.__name__,
+        "criterion": criterion,
+        "lr": lr,
+        "weight_decay": weight_decay,
+        "lr_factor": factor,
+        "scheduler_patience": scheduler_patience,
+    }
+
+    # data loader dictionary
+    dataloader_dic = {
+        "batch_size": batch_size,
+        "num_classes": num_classes,
+        "input_size": train_dataloader.dataset.input_size,
+        "dataset": train_dataloader.dataset.dataset_task,
+        "shuffle": train_dataloader.dataset.shuffle,
+        "normalize": train_dataloader.dataset.normalize,
+        "transform": train_dataloader.dataset.transform
+    }
+
     # initialize wandb run
     wandb.init(
         project=project_name,
         entity="enzymes",
         mode="offline",
         dir="/home/jaggbow/scratch/clem/logs/sweep",
-        config={"lr": lr},
+        config={
+            "device": device,
+            "model": model_dic,
+            "dataloader": dataloader_dic
+        },
         name=f"{model_config_name}_run_{trial.number}",
     )
-
-    # make model
-    model = make_model(model_config, input_shape=input_shape, num_classes=num_classes)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
-    criterion = DiceCELoss()
     wandb.watch(model, log="all")
 
     # train model
@@ -168,7 +195,7 @@ if __name__ == "__main__":
 
     # init constant parameters
     weight_decay = model_config_json["training"]["weight_decay"]
-    patience = model_config_json["training"]["patience"]
+    scheduler_patience = model_config_json["training"]["patience"]
     factor = model_config_json["training"]["factor"]
 
     # create and run optuna study
