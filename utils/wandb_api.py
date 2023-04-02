@@ -1,5 +1,7 @@
 import os
 import wandb
+import shutil
+import subprocess
 import pandas as pd
 
 
@@ -42,3 +44,28 @@ def get_wandb_run_data(entity, project, run_id):
     history_df = history_df.reset_index(drop=True)
 
     return history_df
+
+
+def sync_offline_runs(folder_path, delete=False):
+    """
+    Sync offline wandb runs to the cloud.
+    
+    Args:
+        folder_path (str):
+            The path to the folder containing the offline wandb runs.
+        delete (bool):
+            Whether to delete the offline runs after syncing.
+    """
+    # get all wandb folders
+    wandb_folders = [os.path.join(folder_path, folder) for folder in sorted(os.listdir(folder_path)) if folder.startswith("offline-run-")]
+
+    # sync each wandb folder
+    for wandb_folder in wandb_folders:
+        # check if run is finished
+        if os.path.exists(os.path.join(wandb_folder, "files", "wandb-summary.json")):
+            # sync wandb folder
+            subprocess.run(["wandb", "sync", wandb_folder])
+
+            # delete wandb folder
+            if delete:
+                shutil.rmtree(wandb_folder)
