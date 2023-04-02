@@ -89,7 +89,7 @@ def log_wandb_run(model,
                 dir=wandb_dir)
     wandb.watch(model, log="all")
 
-    train(model, 
+    _ = train(model, 
           train_dataloader, 
           val_dataloader, 
           batch_size,

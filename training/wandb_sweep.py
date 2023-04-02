@@ -49,12 +49,11 @@ def train_sweep(
         criterion = DiceCELoss()
 
         print("train")
-        train(model, 
-              config.batch_size,
-              config.num_classes,
-              device,
+        _ = train(model, 
               train_dataloader, 
               val_dataloader, 
+              config.batch_size,
+              config.num_classes,
               num_epochs=config.epochs, 
               patience=early_stop_patience, 
               optimizer=optimizer, 

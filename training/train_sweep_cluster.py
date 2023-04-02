@@ -10,10 +10,66 @@ import json
 import torch
 import wandb
 import argparse
+import optuna
+
+from monai.losses import DiceCELoss
 
 from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_training_local
 from preprocessing.data_loader import load_data
-from wandb_sweep import train_sweep
+from experiments.make_model import make_model
+from train import train
+
+
+def objective(trial):
+    '''
+    Objective function for Optuna optimization
+    
+    Args:
+        trial (optuna.trial.Trial): 
+            Optuna trial object
+    '''
+    # get hyperparameters
+    lr = trial.suggest_float("lr", 1e-6, 1e-1, log=True)
+
+    # initialize wandb run
+    wandb.init(
+        project=project_name,
+        entity="enzymes",
+        mode="offline",
+        dir="/home/jaggbow/scratch/clem/logs/sweep",
+        config={"lr": lr},
+        name=f"sweep_run_{trial.number}",
+    )
+
+    # make model
+    model = make_model(model_config, input_shape=input_shape, num_classes=num_classes)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
+    criterion = DiceCELoss()
+    wandb.watch(model, log="all")
+
+    # train model
+    best_val_dice = train(
+        model=model, 
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        batch_size=batch_size,
+        num_classes=num_classes,
+        num_epochs=num_epochs, 
+        patience=num_epochs, 
+        optimizer=optimizer, 
+        scheduler=scheduler,
+        criterion=criterion, 
+        wandb_log=True,
+        segmentation_ouput=False,
+        artifact_log=False,
+    )
+
+    #terminate run
+    wandb.finish()
+
+    # return best validation dice
+    return best_val_dice["max_val_dice_1"]
 
 
 if __name__ == "__main__":
@@ -27,11 +83,14 @@ if __name__ == "__main__":
     parser.add_argument('--task_name',
                         type=str, default='Task02_Heart',
                         help='Name of the task')
+    parser.add_argument('--project_name',
+                        type=str, default='unet_sweep',
+                        help='Name of the wandb project')
     parser.add_argument('--num_epochs',
-                        type=int, default=60,
+                        type=int, default=50,
                         help='Number of epochs')
     parser.add_argument('--num_trials', 
-                        type=int, default=10,
+                        type=int, default=20,
                         help='Number of trials')
     
     # parse arguments
@@ -39,6 +98,7 @@ if __name__ == "__main__":
     model_config = args.model_config
     dataset_path = args.dataset_path
     task_name = args.task_name
+    project_name = args.project_name
     num_epochs = args.num_epochs
     num_trials = args.num_trials
 
@@ -108,68 +168,12 @@ if __name__ == "__main__":
     patience = model_config_json["training"]["patience"]
     factor = model_config_json["training"]["factor"]
 
-    # setup the sweep 
-    sweep_config = {
-        'method': 'bayes'
-    }
+    # create and run optuna study
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=num_trials)
 
-    # the goal is to maximize the validation dice score of the foreground
-    metric = {
-        'name': 'max_val_dice_1',
-        'goal': 'maximize'   
-    }
-
-    early_terminate = {
-        'type': 'hyperband',
-        'min_iter': 30
-    }
-
-    sweep_config['early_terminate'] = early_terminate
-
-    sweep_config['metric'] = metric
-
-    # hyper parameter space
-    parameters_dict = {
-        # constant values 
-        'batch_size' : {
-            'value': 2
-        },
-        'epochs': {
-            'value': num_epochs
-        },
-        'num_classes':{
-            'value': num_classes
-        },
-        'input_shape': {
-            'value': input_shape
-        },
-        'weight_decay': {
-            'value': weight_decay
-        },
-        'patience': {
-            'value': patience
-        },
-        'lr_factor': {
-            'value': factor
-        },
-
-        # optimizer variables
-        'lr': {
-            'distribution': 'log_uniform_values',
-            'min': 1e-6,
-            'max': 1e-1
-        },
-    }
-    sweep_config['parameters'] = parameters_dict
+    # print best parameters
+    print("Best trial:", study.best_trial.number)
+    print("Best value:", study.best_value)
+    print("Best parameters:", study.best_params)
     
-    sweep_trainer = lambda: train_sweep(
-        config=None,
-        model_config=model_config,
-        early_stop_patience=100,
-        train_dataloader=train_dataloader,
-        val_dataloader=val_dataloader
-    )
-
-    # run the sweep
-    sweep_id = wandb.sweep(sweep_config, project="unet_colon_sweep", entity='enzymes')
-    wandb.agent(sweep_id, sweep_trainer, count=num_trials)

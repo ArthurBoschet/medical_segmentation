@@ -52,6 +52,10 @@ def train(model,
             Whether to log segmentation image results
         artifact_log: bool
             Whether to log model as artifact
+
+    Returns:
+        val_dice_max: dict
+            Dictionary of maximum validation dice scores
     '''
 
     # wandb dir run
@@ -270,3 +274,5 @@ def train(model,
             )
             artifact.add_file(f"{run_dir}/best_model.pt")
             wandb.log_artifact(artifact)
+
+    return val_dice_max
