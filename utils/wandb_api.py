@@ -4,6 +4,8 @@ import shutil
 import subprocess
 import pandas as pd
 
+from tqdm import tqdm
+
 
 def get_wandb_run_data(entity, project, run_id):
     """
@@ -60,7 +62,7 @@ def sync_offline_runs(folder_path, delete=False):
     wandb_folders = [os.path.join(folder_path, folder) for folder in sorted(os.listdir(folder_path)) if folder.startswith("offline-run-")]
 
     # sync each wandb folder
-    for wandb_folder in wandb_folders:
+    for wandb_folder in tqdm(wandb_folders):
         # check if run is finished
         if os.path.exists(os.path.join(wandb_folder, "files", "wandb-summary.json")):
             # sync wandb folder
