@@ -4,12 +4,13 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from monai.losses import DiceCELoss
 import wandb
 from training.train import train
+from experiments.make_model import make_model
 
 
 def train_sweep(
     config=None,
     early_stop_patience=100,
-    build_network=make_unet_baseline,
+    build_network=make_model("../experiments/configs/unet.json"),
     train_dataloader=None,
     val_dataloader=None
     ):
