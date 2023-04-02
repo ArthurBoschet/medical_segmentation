@@ -32,6 +32,9 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs',
                         type=int, default=100,
                         help='Number of epochs')
+    parser.add_argument('--lr',
+                        type=float, default=1e-3,
+                        help='Learning rate')
     
     # parse arguments
     args = parser.parse_args()
@@ -39,6 +42,7 @@ if __name__ == "__main__":
     dataset_path = args.dataset_path
     task_name = args.task_name
     num_epochs = args.num_epochs
+    lr = args.lr
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -105,9 +109,12 @@ if __name__ == "__main__":
     model = make_model(config=model_config, input_shape=input_shape, num_classes=num_classes)
 
     # init parameters
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-7)
+    weight_decay = model_config_json["training"]["weight_decay"]
+    patience = model_config_json["training"]["patience"]
+    factor = model_config_json["training"]["factor"]
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = DiceCELoss()
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=20)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=factor, patience=patience)
     run_name = f"{model.__class__.__name__}_{task_name}"
 
     # train model

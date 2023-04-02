@@ -62,6 +62,7 @@ def log_wandb_run(model,
         "patience": patience,
         "optimizer": optimizer.__class__.__name__,
         "criterion": criterion,
+        "lr": optimizer.param_groups[0]['lr'],
     }
 
     # data loader dictionary
@@ -84,8 +85,7 @@ def log_wandb_run(model,
                     "model": model_dic,
                     "dataloader": dataloader_dic
                 },
-                # mode="offline" if offline else "online",
-                mode="disabled",
+                mode="offline" if offline else "online",
                 dir=wandb_dir)
     wandb.watch(model, log="all")
 
