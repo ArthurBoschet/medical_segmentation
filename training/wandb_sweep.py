@@ -4,7 +4,6 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from monai.losses import DiceCELoss
 import wandb
 from training.train import train
-from instanciate_models.make_unet_baseline import make_unet_baseline
 
 
 def train_sweep(
