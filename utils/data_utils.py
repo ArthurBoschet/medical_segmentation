@@ -1,5 +1,4 @@
 import os
-import json
 import shutil
 import numpy as np
 import nibabel as nib
@@ -140,11 +139,11 @@ def prepare_dataset_for_training_local(dataset_folder_path):
     os.makedirs(os.path.join(dataset_folder_path, "test"))
 
     # copy training images and labels to train_val folders
-    for tr_im_file, tr_label_file in zip(train_images_files, train_labels_files):
+    for tr_im_file, tr_label_file in tqdm(zip(train_images_files, train_labels_files)):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTr", tr_im_file), os.path.join(dataset_folder_path, "train_val", tr_im_file))
         shutil.copyfile(os.path.join(dataset_folder_path, "labelsTr", tr_label_file), os.path.join(dataset_folder_path, "train_val", tr_label_file))
     # copy test images to test folder
-    for test_im_file in test_images_files:
+    for test_im_file in tqdm(test_images_files):
         shutil.copyfile(os.path.join(dataset_folder_path, "imagesTs", test_im_file), os.path.join(dataset_folder_path, "test", test_im_file))
     
     # remove useless folders

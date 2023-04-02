@@ -51,6 +51,11 @@ def train(model,
             Whether to log segmentation image results
     '''
 
+    # wandb dir run
+    run_dir = ""
+    if wandb_log:
+        run_dir = wandb.run.dir
+
     # setup device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -225,9 +230,9 @@ def train(model,
             patience_count = 0
             best_val_dice = wandb_dict["val_dice_1"]
             best_epoch = epoch
-            torch.save(model.state_dict(), "best_model.pt")
+            torch.save(model.state_dict(), f"{run_dir}/best_model.pt")
             if wandb_log:
-                wandb.save("best_model.pt")
+                wandb.save(f"{run_dir}/best_model.pt", base_path=run_dir)
         else:
             patience_count+=1
 
@@ -256,5 +261,5 @@ def train(model,
             type="model", 
             description=f"Model after epoch {best_epoch}"
         )
-        artifact.add_file("best_model.pt")
+        artifact.add_file(f"{run_dir}/best_model.pt")
         wandb.log_artifact(artifact)

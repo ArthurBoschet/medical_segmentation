@@ -24,7 +24,7 @@ if __name__ == "__main__":
                         type=str, default='../experiments/configs/unet.json',
                         help='Path to the model config json file')
     parser.add_argument('--dataset_path',
-                        type=str, default='home/jaggbow/scratch/clem/dataset', 
+                        type=str, default='/home/jaggbow/scratch/clem/dataset', 
                         help='Path to the dataset folder')
     parser.add_argument('--task_name',
                         type=str, default='Task02_Heart',
@@ -122,4 +122,6 @@ if __name__ == "__main__":
                  criterion=criterion, 
                  scheduler=scheduler,
                  segmentation_ouput=True,
-                 run_name=run_name)
+                 run_name=run_name,
+                 offline=True,
+                 wandb_dir="/home/jaggbow/scratch/clem/logs")

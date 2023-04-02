@@ -15,6 +15,8 @@ def log_wandb_run(model,
                   scheduler=None,
                   segmentation_ouput=False,
                   run_name=None,
+                  offline=False,
+                  wandb_dir=None
                   ):
     ''' 
     Train a U-Net model
@@ -44,6 +46,10 @@ def log_wandb_run(model,
             Whether to log segmentation image results
         run_name: str
             Name of the run to log to wandb
+        offline: bool
+            Whether to log to wandb offline
+        wandb_dir: str
+            Directory to save wandb logs
     '''
 
     # setup device
@@ -77,7 +83,9 @@ def log_wandb_run(model,
                     "device": device,
                     "model": model_dic,
                     "dataloader": dataloader_dic
-                })
+                },
+                mode="offline" if offline else "online",
+                dir=wandb_dir)
     wandb.watch(model, log="all")
 
     train(model, 

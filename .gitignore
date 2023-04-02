@@ -3,7 +3,6 @@ dataset
 weights
 .DS_Store
 wandb
-inference
 artifacts
 sbatch_scripts
 
