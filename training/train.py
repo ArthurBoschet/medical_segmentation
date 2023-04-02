@@ -174,17 +174,20 @@ def train(model,
                         plt.close()
 
         # calculate average loss and dice scores
-        train_loss = train_loss / len(train_dataloader) * batch_size
+        adjust_factor_train = 1 if len(train_dataloader) % 2 == 0 else len(train_dataloader)/(len(train_dataloader)+1)
+        adjust_factor_val = 1 if len(val_dataloader) % 2 == 0 else len(val_dataloader)/(len(val_dataloader)+1)
+
+        train_loss = train_loss / len(train_dataloader) * batch_size * adjust_factor_train
         for i in range(num_classes):
-          train_dice[i] = train_dice[i] / len(train_dataloader.dataset) * batch_size
-          train_iou[i] = train_iou[i] / len(train_dataloader.dataset) * batch_size
-          val_dice[i] = val_dice[i] / len(val_dataloader.dataset) * batch_size
-          val_iou[i] = val_iou[i] / len(val_dataloader.dataset) * batch_size
+          train_dice[i] = train_dice[i] / len(train_dataloader.dataset) * batch_size * adjust_factor_train
+          train_iou[i] = train_iou[i] / len(train_dataloader.dataset) * batch_size * adjust_factor_train
+          val_dice[i] = val_dice[i] / len(val_dataloader.dataset) * batch_size * adjust_factor_val
+          val_iou[i] = val_iou[i] / len(val_dataloader.dataset) * batch_size * adjust_factor_val
 
 
-        train_f1_macro = train_f1_macro / len(train_dataloader.dataset) * batch_size
-        val_loss = val_loss / len(val_dataloader) * batch_size
-        val_f1_macro = val_f1_macro / len(val_dataloader.dataset) * batch_size
+        train_f1_macro = train_f1_macro / len(train_dataloader.dataset) * batch_size * adjust_factor_train
+        val_loss = val_loss / len(val_dataloader) * batch_size * adjust_factor_val
+        val_f1_macro = val_f1_macro / len(val_dataloader.dataset) * batch_size * adjust_factor_val
 
         # store loss and dice scores
         train_loss_list.append(train_loss)
