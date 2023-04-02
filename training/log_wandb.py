@@ -84,7 +84,8 @@ def log_wandb_run(model,
                     "model": model_dic,
                     "dataloader": dataloader_dic
                 },
-                mode="offline" if offline else "online",
+                # mode="offline" if offline else "online",
+                mode="disabled",
                 dir=wandb_dir)
     wandb.watch(model, log="all")
 

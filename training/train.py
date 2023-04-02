@@ -113,6 +113,8 @@ def train(model,
                 model_predict_proba = predict_softmax(outputs)
             else:
                 model_predict_proba = model.predict_proba(images)
+            print("model_predict_proba.shape: ", model_predict_proba.shape)
+            print("labels.shape: ", labels.shape)
             loss = criterion(model_predict_proba, labels)
 
             # backward
