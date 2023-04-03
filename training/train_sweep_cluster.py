@@ -79,7 +79,7 @@ def objective(trial):
     wandb.watch(model, log="all")
 
     # train model
-    best_val_dice = train(
+    best_val_dice_macro = train(
         model=model, 
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
@@ -98,8 +98,8 @@ def objective(trial):
     #terminate run
     wandb.finish()
 
-    # return best validation dice
-    return best_val_dice["max_val_dice_1"]
+    # return best validation dice macro
+    return best_val_dice_macro
 
 
 if __name__ == "__main__":
