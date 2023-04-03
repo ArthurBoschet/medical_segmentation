@@ -25,7 +25,7 @@ monai==1.1.0
 einops==0.6.0
 plotly==5.13.1
 seaborn==0.12.2
-optna==3.1.0
+optuna==3.1.0
 torch
 thop
 
