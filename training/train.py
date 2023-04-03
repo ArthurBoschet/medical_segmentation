@@ -88,7 +88,7 @@ def train(model,
     slices_dic = {}
 
     # initialize training params
-    best_val_dice = 0
+    max_val_dice_macro = 0
     best_epoch = 0
     patience_count = 0
 
@@ -216,6 +216,10 @@ def train(model,
           print(f"--> Train Dice {i}: {train_dice[i]:.4f} | Val Dice {i}: {val_dice[i]:.4f}")
           print(f"--> Train IoU {i}: {train_iou[i]:.4f} | Val IoU {i}: {val_iou[i]:.4f}")
 
+        # calculate macro validation dice score
+        val_dice_macro = np.mean([max(val_dice_list[i]) for i in range(1, num_classes)])
+        train_dice_macro = np.mean([max(train_dice_list[i]) for i in range(1, num_classes)])
+
         # log to wandb
         if wandb_log:
             wandb_dict = {
@@ -233,14 +237,20 @@ def train(model,
                 } | {
                     f"val_iou_{i}": val_iou[i] for i in range(num_classes)
                 }
+            if num_classes > 2:
+                wandb_dict = wandb_dict | {
+                    "val_dice_macro": val_dice_macro
+                } | {
+                    "train_dice_macro": train_dice_macro
+                }
             if segmentation_ouput:
                 wandb_dict = wandb_dict | slices_dic
             wandb.log(wandb_dict)
 
         # save best model
-        if wandb_dict["val_dice_1"] > best_val_dice:
+        if val_dice_macro > max_val_dice_macro:
             patience_count = 0
-            best_val_dice = wandb_dict["val_dice_1"]
+            max_val_dice_macro = val_dice_macro
             best_epoch = epoch
             torch.save(model.state_dict(), f"{run_dir}/best_model.pt")
             if wandb_log:
@@ -267,6 +277,8 @@ def train(model,
 
     if wandb_log:
         val_dice_max = {f"max_val_dice_{i}":max(val_dice_list[i]) for i in range(num_classes)}
+        if num_classes > 2:
+            val_dice_max = val_dice_max | {"max_val_dice_macro": max_val_dice_macro}
         wandb.log(val_dice_max)
         if artifact_log:
             artifact = wandb.Artifact(
@@ -277,4 +289,4 @@ def train(model,
             artifact.add_file(f"{run_dir}/best_model.pt")
             wandb.log_artifact(artifact)
 
-    return val_dice_max
+    return max_val_dice_macro
