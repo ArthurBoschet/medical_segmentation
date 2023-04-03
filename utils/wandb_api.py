@@ -1,6 +1,7 @@
 import os
 import wandb
 import shutil
+import torch
 import subprocess
 import pandas as pd
 
@@ -71,3 +72,34 @@ def sync_offline_runs(folder_path, delete=False):
             # delete wandb folder
             if delete:
                 shutil.rmtree(wandb_folder)
+
+def download_weights_wandb(username, project_name, artifact_name, artifact_version):
+    '''
+    Download model weights from wandb
+
+    Args:
+        username: str
+            Username of the wandb account
+        project_name: str
+            Name of the wandb project
+        artifact_name: str
+            Name of the wandb artifact
+        artifact_version: str
+            Version of the wandb artifact
+    '''
+    # set up the api instance
+    artifact_path = os.path.join(username, project_name, f"{artifact_name}:v{artifact_version}")
+
+    # set up the weights artifact
+    api = wandb.Api()
+    artifact = api.artifact(artifact_path)
+
+    # setup output directory
+    output_dir = os.path.join('/home/jaggbow/scratch/clem/weights', project_name, artifact_name, artifact_version)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # download the artifact
+    weights_path = artifact.download(root=output_dir)
+
+    print(f"Model weights downloaded to {weights_path} and loaded into PyTorch model correctly")

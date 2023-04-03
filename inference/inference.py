@@ -1,9 +1,9 @@
 import os
 import datetime
 import numpy as np
-import nibabel as nib
 import torch
-import wandb
+
+from tqdm import tqdm
 
 from utils.data_utils import save_nifti
 
@@ -52,55 +52,18 @@ def model_inference(model,
     output_folder = os.path.join(output_folder, timestamp_str)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    test_folder_path = os.path.join(dataset_dir, dataset_name, "test")
+    test_folder_path = os.path.join(dataset_dir, "test")
     filenames = sorted(os.listdir(test_folder_path))
+
+    print("Inference on test set...")
 
     model.eval()
     with torch.no_grad():
-        for i, (input, idx) in enumerate(zip(test_dataloader, output_filenames_idx)):
+        for i, (input, idx) in tqdm(enumerate(zip(test_dataloader, output_filenames_idx))):
             resize = np.load(os.path.join(os.path.join(test_folder_path, filenames[i]))).shape
             output = model.predict(input.to(device)).float()
-            output = torch.nn.functional.interpolate(output, size=(resize), mode='trilinear')
+            output = torch.nn.functional.interpolate(output, size=tuple((resize[1], resize[2], resize[3])), mode='trilinear')
             output = torch.round(output)
             label = output[0][0].cpu().numpy().astype(np.int8)
             label = np.transpose(label, (1, 2, 0))
             save_nifti(label, affine=np.eye(4), filename=os.path.join(output_folder, f"{task_name_dic[dataset_name]}_{idx}.nii.gz"))
-
-
-def download_model_wandb(network, username, project_name, artifact_name, artifact_version):
-    '''
-    Download model weights from wandb
-
-    Args:
-        network: nn.Module
-            PyTorch model to load the weights into
-        username: str
-            Username of the wandb account
-        project_name: str
-            Name of the wandb project
-        artifact_name: str
-            Name of the wandb artifact
-        artifact_version: str
-            Version of the wandb artifact
-
-    Returns:
-        network: nn.Module
-            PyTorch model with the weights loaded
-    '''
-    # set up the api instance
-    artifact_path = os.path.join(username, project_name, f"{artifact_name}:{artifact_version}")
-
-    # set up the weights artifact
-    api = wandb.Api()
-    artifact = api.artifact(artifact_path)
-
-    # download the artifact
-    weights_path = artifact.download()
-
-    # load weights into model
-    weights = torch.load(os.path.join(weights_path, "best_model.pt"))
-    network.load_state_dict(weights)
-
-    print(f"Model weights downloaded to {weights_path} and loaded into PyTorch model correctly")
-
-    return network
