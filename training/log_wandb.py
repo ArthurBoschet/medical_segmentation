@@ -77,7 +77,7 @@ def log_wandb_run(model,
     }
 
     # initialize wandb
-    wandb.init(project="ift6759_project", 
+    wandb.init(project=dataloader_dic["dataset"], 
                 entity="enzymes", 
                 name=run_name,
                 config={

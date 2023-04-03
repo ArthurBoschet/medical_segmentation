@@ -268,7 +268,7 @@ def train(model,
         wandb.log(val_dice_max)
         if artifact_log:
             artifact = wandb.Artifact(
-                f"{train_dataloader.dataset.dataset_task}_{model.__class__.__name__}", 
+                f"{model.__class__.__name__}", 
                 type="model", 
                 description=f"Model after epoch {best_epoch}"
             )
