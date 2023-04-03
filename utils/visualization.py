@@ -178,7 +178,7 @@ def plot_learning_curves(dfs, metric, model_names, y_axis, figsize=(10, 5), show
     # plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
     if show:
         plt.show()
     
@@ -244,7 +244,7 @@ def plot_seaborn_fold_wise(plot_type, df_baseline, dfs_compared, metric, model_n
     # plt.rc('font', size=14)
     plt.grid()
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
     if show:
         plt.show()
     
@@ -276,20 +276,22 @@ def plot_scatter_relations(df, variable, metric, xlabel, ylabel, figsize=(10, 5)
     """
     assert len(df[metric].values) == len(df[variable].values)
 
+    markers_list = ["x", "s", "v", "*", "o", "+", "D", "p", "2", "<", ">"]
     plt.figure(figsize=figsize)
-    df = df.sort_values(by=[variable])
+    # df = df.sort_values(by=[variable])
     for i, txt in enumerate(df.index):
-        # plt.scatter(df[variable].values[i], df[metric].values[i], marker='x', label=txt)
-        plt.scatter(df[variable].values[i], df[metric].values[i], marker='x')
-        plt.annotate(txt, (df[variable].values[i], df[metric].values[i]))
+        plt.scatter(df[variable].values[i], df[metric].values[i], marker=markers_list[i], label=txt, linewidths=2)
+        # plt.scatter(df[variable].values[i], df[metric].values[i], marker=markers_list[i])
+        # plt.annotate(txt, (df[variable].values[i], df[metric].values[i]))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(f"Relations between {xlabel} and {ylabel}")
+    plt.xscale('log')
     # plt.rc('font', size=14)
-    # plt.legend()
+    plt.legend()
     plt.grid()
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
     if show:
         plt.show()
     

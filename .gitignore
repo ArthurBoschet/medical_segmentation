@@ -3,8 +3,8 @@ dataset
 weights
 .DS_Store
 wandb
-inference
 artifacts
+sbatch_scripts
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

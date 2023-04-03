@@ -15,6 +15,8 @@ def log_wandb_run(model,
                   scheduler=None,
                   segmentation_ouput=False,
                   run_name=None,
+                  offline=False,
+                  wandb_dir=None
                   ):
     ''' 
     Train a U-Net model
@@ -44,6 +46,10 @@ def log_wandb_run(model,
             Whether to log segmentation image results
         run_name: str
             Name of the run to log to wandb
+        offline: bool
+            Whether to log to wandb offline
+        wandb_dir: str
+            Directory to save wandb logs
     '''
 
     # setup device
@@ -56,6 +62,7 @@ def log_wandb_run(model,
         "patience": patience,
         "optimizer": optimizer.__class__.__name__,
         "criterion": criterion,
+        "lr": optimizer.param_groups[0]['lr'],
     }
 
     # data loader dictionary
@@ -70,29 +77,32 @@ def log_wandb_run(model,
     }
 
     # initialize wandb
-    wandb.init(project="ift6759_project", 
+    wandb.init(project=dataloader_dic["dataset"], 
                 entity="enzymes", 
                 name=run_name,
                 config={
                     "device": device,
                     "model": model_dic,
                     "dataloader": dataloader_dic
-                })
+                },
+                mode="offline" if offline else "online",
+                dir=wandb_dir)
     wandb.watch(model, log="all")
 
-    train(model, 
-          train_dataloader, 
-          val_dataloader, 
-          batch_size,
-          num_classes,
-          num_epochs=num_epochs, 
-          patience=patience, 
-          optimizer=optimizer, 
-          criterion=criterion, 
-          scheduler=scheduler,
-          wandb_log=True,
-          segmentation_ouput=segmentation_ouput,
-          )
+    _ = train(model, 
+              train_dataloader, 
+              val_dataloader, 
+              batch_size,
+              num_classes,
+              num_epochs=num_epochs, 
+              patience=patience, 
+              optimizer=optimizer, 
+              criterion=criterion, 
+              scheduler=scheduler,
+              wandb_log=True,
+              segmentation_ouput=segmentation_ouput,
+              artifact_log=True,
+              )
     
     #terminate run
     wandb.finish()
