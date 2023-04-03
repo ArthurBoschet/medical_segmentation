@@ -94,7 +94,10 @@ def train(model,
 
     # setup torchmetrics
     dice = Dice(num_classes=1, average='micro').to(device)
-    #f1 = F1Score(task='binary', num_classes=num_classes, average='macro').to(device)
+    if num_classes>2:
+        f1 = F1Score(task='multiclass', num_classes=num_classes, average='macro').to(device)
+    else:
+        f1 = F1Score(task='binary', num_classes=num_classes, average='macro').to(device)
 
     print("-------------- START TRAINING -------------- ")
     
@@ -128,7 +131,7 @@ def train(model,
 
             # statistics
             train_loss += loss.item()
-            #train_f1_macro += f1(model_predict_proba.argmax(1, keepdim=True), labels.argmax(1, keepdim=True))
+            train_f1_macro += f1(model_predict_proba.argmax(1, keepdim=True), labels.argmax(1, keepdim=True))
             for i in range(num_classes):
               train_dice[i] += dice(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
               train_iou[i] += iou_score(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
@@ -154,7 +157,7 @@ def train(model,
 
                 # statistics
                 val_loss += loss.item()
-                #val_f1_macro += f1(model_predict_proba.argmax(1, keepdim=True), labels.argmax(1, keepdim=True))
+                val_f1_macro += f1(model_predict_proba.argmax(1, keepdim=True), labels.argmax(1, keepdim=True))
                 for i in range(num_classes):
                   val_dice[i] += dice(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
                   val_iou[i] += iou_score(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
@@ -169,7 +172,7 @@ def train(model,
                     else:
                         output = model.predict(val_im.unsqueeze(0).to(device))
                     val_im = val_im.cpu().numpy()[0]
-                    val_label = val_label.cpu().numpy()[-1]
+                    val_label = val_label.cpu().numpy()[0]
                     output = output[0].cpu().numpy()[0]
                     for s in range(val_im.shape[1]):
                         fig, ax = plt.subplots(1, 2)
@@ -193,9 +196,9 @@ def train(model,
 
 
 
-        #train_f1_macro = train_f1_macro / len(train_dataloader.dataset) * batch_size
+        train_f1_macro = train_f1_macro / len(train_dataloader.dataset) * batch_size
         val_loss = val_loss / len(val_dataloader) * batch_size
-        #val_f1_macro = val_f1_macro / len(val_dataloader.dataset) * batch_size
+        val_f1_macro = val_f1_macro / len(val_dataloader.dataset) * batch_size
 
 
         # store loss and dice score s
@@ -205,13 +208,13 @@ def train(model,
           train_iou_list[i].append(train_iou[i])
           val_dice_list[i].append(val_dice[i])
           val_iou_list[i].append(val_iou[i])
-        #train_f1_macro_list.append(train_f1_macro)
+        train_f1_macro_list.append(train_f1_macro)
         val_loss_list.append(val_loss)
-        #val_f1_macro_list.append(val_f1_macro)
+        val_f1_macro_list.append(val_f1_macro)
 
         # print epoch results
         print(f"--> Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-        #print(f"--> Train F1_macro: {train_f1_macro:.4f} | Val F1_macro: {val_f1_macro:.4f}")
+        print(f"--> Train F1_macro: {train_f1_macro:.4f} | Val F1_macro: {val_f1_macro:.4f}")
         for i in range(num_classes):
           print(f"--> Train Dice {i}: {train_dice[i]:.4f} | Val Dice {i}: {val_dice[i]:.4f}")
           print(f"--> Train IoU {i}: {train_iou[i]:.4f} | Val IoU {i}: {val_iou[i]:.4f}")
@@ -221,9 +224,9 @@ def train(model,
             wandb_dict = {
                 "epoch": (epoch+1),
                 "train_loss": train_loss,
-                #"train_f1_macro": train_f1_macro,
+                "train_f1_macro": train_f1_macro,
                 "val_loss": val_loss,
-                #"val_f1_macro": val_f1_macro,
+                "val_f1_macro": val_f1_macro,
                 } | {
                     f"train_dice_{i}": train_dice[i] for i in range(num_classes)
                 } | {
