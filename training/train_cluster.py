@@ -33,12 +33,18 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs',
                         type=int, default=100,
                         help='Number of epochs')
+    parser.add_argument('--patience',
+                        type=int, default=100,
+                        help='Patience for early stopping')
     parser.add_argument('--lr',
                         type=float, default=1e-3,
                         help='Learning rate')
     parser.add_argument('--k_folds',
                         type=int, default=0,
                         help='Number of k-folds to use for training (0 for no k-folds)')
+    parser.add_argument('--k_folds_start_idx',
+                        type=int, default=0,
+                        help='Index of the k-fold to start training from')
     
     # parse arguments
     args = parser.parse_args()
@@ -46,8 +52,10 @@ if __name__ == "__main__":
     dataset_path = args.dataset_path
     task_name = args.task_name
     num_epochs = args.num_epochs
+    patience = args.patience
     lr = args.lr
     k_folds = args.k_folds
+    k_folds_start_idx = args.k_folds_start_idx
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -117,11 +125,11 @@ if __name__ == "__main__":
 
         # init parameters
         weight_decay = model_config_json["training"]["weight_decay"]
-        patience = model_config_json["training"]["patience"]
+        lr_patience = model_config_json["training"]["patience"]
         factor = model_config_json["training"]["factor"]
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         criterion = DiceCELoss(to_onehot_y=False)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=patience)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=lr_patience)
         run_name = f"{model.__class__.__name__}_{task_name}"
 
         # train model
@@ -131,11 +139,11 @@ if __name__ == "__main__":
                       batch_size=batch_size,
                       num_classes=num_classes, 
                       num_epochs=num_epochs, 
-                      patience=100, 
+                      patience=patience, 
                       optimizer=optimizer, 
                       criterion=criterion, 
                       scheduler=scheduler,
-                      segmentation_ouput=True,
+                      segmentation_ouput=False,
                       run_name=run_name,
                       offline=True,
                       wandb_dir="/home/jaggbow/scratch/clem/logs")
@@ -145,10 +153,11 @@ if __name__ == "__main__":
                             task_folder_path,
                             lr=lr,
                             k_folds=k_folds,
+                            k_folds_start_idx=k_folds_start_idx,
                             batch_size=batch_size,
                             num_classes=num_classes,
                             num_epochs=num_epochs,
-                            patience=num_epochs,
+                            patience=patience,
                             segmentation_ouput=True,
                             offline=True,
                             wandb_dir="/home/jaggbow/scratch/clem/logs")

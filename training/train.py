@@ -172,6 +172,7 @@ def train(model,
                     else:
                         output = model.predict(val_im.unsqueeze(0).to(device))
                     val_im = val_im.cpu().numpy()[0]
+                    val_label = torch.argmax(val_label, 0, keepdim=True)
                     val_label = val_label.cpu().numpy()[0]
                     output = output[0].cpu().numpy()[0]
                     for s in range(val_im.shape[1]):
@@ -194,12 +195,9 @@ def train(model,
           val_dice[i] = val_dice[i] / len(val_dataloader.dataset) * batch_size * adjust_factor_val
           val_iou[i] = val_iou[i] / len(val_dataloader.dataset) * batch_size * adjust_factor_val
 
-
-
         train_f1_macro = train_f1_macro / len(train_dataloader.dataset) * batch_size
         val_loss = val_loss / len(val_dataloader) * batch_size
         val_f1_macro = val_f1_macro / len(val_dataloader.dataset) * batch_size
-
 
         # store loss and dice score s
         train_loss_list.append(train_loss)
@@ -212,16 +210,22 @@ def train(model,
         val_loss_list.append(val_loss)
         val_f1_macro_list.append(val_f1_macro)
 
+        # calculate macro validation dice and IoU scores (excluding background)
+        val_dice_macro = np.mean([max(val_dice_list[i]).cpu().numpy() for i in range(1, num_classes)])
+        train_dice_macro = np.mean([max(train_dice_list[i]).cpu().numpy() for i in range(1, num_classes)])
+        val_iou_macro = np.mean([max(val_iou_list[i]) for i in range(1, num_classes)])
+        train_iou_macro = np.mean([max(train_iou_list[i]) for i in range(1, num_classes)])
+
         # print epoch results
         print(f"--> Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
         print(f"--> Train F1_macro: {train_f1_macro:.4f} | Val F1_macro: {val_f1_macro:.4f}")
+        if num_classes > 2:
+            print(f"--> Train Dice_macro: {train_dice_macro:.4f} | Val Dice_macro: {val_dice_macro:.4f}")
+            print(f"--> Train IoU_macro: {train_iou_macro:.4f} | Val IoU_macro: {val_iou_macro:.4f}")
+        print('-----')
         for i in range(num_classes):
           print(f"--> Train Dice {i}: {train_dice[i]:.4f} | Val Dice {i}: {val_dice[i]:.4f}")
           print(f"--> Train IoU {i}: {train_iou[i]:.4f} | Val IoU {i}: {val_iou[i]:.4f}")
-
-        # calculate macro validation dice score
-        val_dice_macro = np.mean([max(val_dice_list[i]) for i in range(1, num_classes)])
-        train_dice_macro = np.mean([max(train_dice_list[i]) for i in range(1, num_classes)])
 
         # log to wandb
         if wandb_log:
@@ -232,19 +236,23 @@ def train(model,
                 "val_loss": val_loss,
                 "val_f1_macro": val_f1_macro,
                 } | {
-                    f"train_dice_{i}": train_dice[i] for i in range(num_classes)
+                    f"train_dice_{i}": train_dice[i] for i in range(1, num_classes)
                 } | {
-                    f"train_iou_{i}": train_iou[i] for i in range(num_classes)
+                    f"train_iou_{i}": train_iou[i] for i in range(1, num_classes)
                 } | {
-                    f"val_dice_{i}": val_dice[i] for i in range(num_classes)
+                    f"val_dice_{i}": val_dice[i] for i in range(1, num_classes)
                 } | {
-                    f"val_iou_{i}": val_iou[i] for i in range(num_classes)
+                    f"val_iou_{i}": val_iou[i] for i in range(1, num_classes)
                 }
             if num_classes > 2:
                 wandb_dict = wandb_dict | {
                     "val_dice_macro": val_dice_macro
                 } | {
                     "train_dice_macro": train_dice_macro
+                } | {
+                    "val_iou_macro": val_iou_macro
+                } | {
+                    "train_iou_macro": train_iou_macro
                 }
             if segmentation_ouput:
                 wandb_dict = wandb_dict | slices_dic
@@ -255,9 +263,10 @@ def train(model,
             patience_count = 0
             max_val_dice_macro = val_dice_macro
             best_epoch = epoch
-            torch.save(model.state_dict(), f"{run_dir}/best_model.pt")
-            if wandb_log:
-                wandb.save(f"{run_dir}/best_model.pt", base_path=run_dir)
+            if artifact_log:
+                torch.save(model.state_dict(), f"{run_dir}/best_model.pt")
+                if wandb_log:
+                    wandb.save(f"{run_dir}/best_model.pt", base_path=run_dir)
         else:
             patience_count+=1
 
@@ -279,9 +288,15 @@ def train(model,
         slices_dic = {}
 
     if wandb_log:
-        val_dice_max = {f"max_val_dice_{i}":max(val_dice_list[i]) for i in range(num_classes)}
-        if num_classes > 2:
-            val_dice_max = val_dice_max | {"max_val_dice_macro": max_val_dice_macro}
+        val_dice_max = {}
+        if num_classes == 2:
+            val_dice_max = val_dice_max | {"max_val_dice_1": max_val_dice_macro}
+        elif num_classes > 2:
+            val_dice_max = val_dice_max | {
+                "max_val_dice_macro": max_val_dice_macro
+            } | {
+                f"max_val_dice_{i}": max(val_dice_list[i]).cpu().numpy().item() for i in range(1, num_classes)
+            }
         wandb.log(val_dice_max)
         if artifact_log:
             artifact = wandb.Artifact(

@@ -17,6 +17,7 @@ def log_wandb_run_kfold(model_config,
                         data_folder_path,
                         lr=1e-3,
                         k_folds=5,
+                        k_folds_start_idx=0,
                         batch_size=2,
                         num_classes=2, 
                         num_epochs=50, 
@@ -36,6 +37,8 @@ def log_wandb_run_kfold(model_config,
             Path to folder containing data
         k_folds: int
             Number of k-folds to use
+        k_folds_start_idx: int
+            Index of the k-fold to start training from
         batch_size: int
             Batch size
         num_classes: int
@@ -64,7 +67,7 @@ def log_wandb_run_kfold(model_config,
         model_config_json = json.load(f)
     
     # kfold cross validation loop
-    for fold in range(k_folds):
+    for fold in range(k_folds_start_idx, k_folds):
 
         print(f"Fold {fold + 1}/{k_folds}")
 
