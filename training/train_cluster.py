@@ -13,7 +13,7 @@ import argparse
 from monai.losses import DiceCELoss
 
 from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_training_local
-from preprocessing.data_loader import load_data
+from preprocessing.data_loader import load_data, load_data_train_only
 from experiments.make_model import make_model
 from log_wandb import log_wandb_run
 from log_wandb_kfold import log_wandb_run_kfold
@@ -45,6 +45,10 @@ if __name__ == "__main__":
     parser.add_argument('--k_folds_start_idx',
                         type=int, default=0,
                         help='Index of the k-fold to start training from')
+    parser.add_argument('--train_only',
+                        action='store_true',dest='train_only',
+                        help='Whether to only train the model (no validation)')
+    parser.set_defaults(train_only=False)
     
     # parse arguments
     args = parser.parse_args()
@@ -56,6 +60,7 @@ if __name__ == "__main__":
     lr = args.lr
     k_folds = args.k_folds
     k_folds_start_idx = args.k_folds_start_idx
+    train_only = args.train_only
 
     # open json file (model config)
     with open(model_config, "r") as f:
@@ -104,13 +109,24 @@ if __name__ == "__main__":
     # check if we are training on k-folds
     if k_folds==0:
         # load dataloaders
-        train_dataloader, val_dataloader = load_data(task_folder_path, 
-                                                     batch_size=batch_size, 
-                                                     num_classes=num_classes, 
-                                                     shuffle=shuffle,
-                                                     normalize=normalize,
-                                                     resize=resize,
-                                                     transform=transform)
+        if train_only:
+            # load train dataloader only
+            train_dataloader = load_data_train_only(task_folder_path,
+                                                    batch_size=batch_size,
+                                                    num_classes=num_classes,
+                                                    shuffle=shuffle,
+                                                    normalize=normalize,
+                                                    resize=resize,
+                                                    transform=transform)
+        else:
+            # load train and val dataloaders
+            train_dataloader, val_dataloader = load_data(task_folder_path, 
+                                                         batch_size=batch_size, 
+                                                         num_classes=num_classes, 
+                                                         shuffle=shuffle,
+                                                         normalize=normalize,
+                                                         resize=resize,
+                                                         transform=transform)
 
         # shapes
         input_example = train_dataloader.dataset[0][0].unsqueeze(0)
@@ -133,20 +149,41 @@ if __name__ == "__main__":
         run_name = f"{model.__class__.__name__}_{task_name}"
 
         # train model
-        log_wandb_run(model, 
-                      train_dataloader, 
-                      val_dataloader, 
-                      batch_size=batch_size,
-                      num_classes=num_classes, 
-                      num_epochs=num_epochs, 
-                      patience=patience, 
-                      optimizer=optimizer, 
-                      criterion=criterion, 
-                      scheduler=scheduler,
-                      segmentation_ouput=False,
-                      run_name=run_name,
-                      offline=True,
-                      wandb_dir="/home/jaggbow/scratch/clem/logs")
+        if train_only:
+            # train model on train set only
+            log_wandb_run(model,
+                          train_dataloader,
+                          None,
+                          batch_size=batch_size,
+                          num_classes=num_classes,
+                          num_epochs=num_epochs,
+                          patience=patience,
+                          optimizer=optimizer,
+                          criterion=criterion,
+                          scheduler=scheduler,
+                          segmentation_ouput=False,
+                          run_name=run_name,
+                          offline=True,
+                          wandb_dir="/home/jaggbow/scratch/clem/logs",
+                          train_only=True)
+        else:
+            # train model on train and val sets
+            log_wandb_run(model, 
+                          train_dataloader, 
+                          val_dataloader, 
+                          batch_size=batch_size,
+                          num_classes=num_classes, 
+                          num_epochs=num_epochs, 
+                          patience=patience, 
+                          optimizer=optimizer, 
+                          criterion=criterion, 
+                          scheduler=scheduler,
+                          segmentation_ouput=False,
+                          run_name=run_name,
+                          offline=True,
+                          wandb_dir="/home/jaggbow/scratch/clem/logs",
+                          train_only=False)
+
     else:
         # train on k-folds and log results
         log_wandb_run_kfold(model_config,

@@ -298,6 +298,7 @@ def train(model,
                 f"max_val_dice_{i}": max(val_dice_list[i]).cpu().numpy().item() for i in range(1, num_classes)
             }
         wandb.log(val_dice_max)
+        wandb.log({"best_epoch": best_epoch})
         if artifact_log:
             artifact = wandb.Artifact(
                 f"{model.__class__.__name__}", 
@@ -308,3 +309,189 @@ def train(model,
             wandb.log_artifact(artifact)
 
     return max_val_dice_macro
+
+
+def train_without_validation(model, 
+                             train_dataloader, 
+                             batch_size,
+                             num_classes, 
+                             num_epochs=50, 
+                             optimizer=None, 
+                             criterion=None, 
+                             wandb_log=False,
+                             segmentation_ouput=False,
+                             artifact_log=True,
+                             ):
+    ''' 
+    Train a model on the training set only
+    
+    Args:
+        model: nn.Module 
+            Model to train
+        train_dataloader: torch.utils.data.DataLoader
+            Dataloader for training set
+        batch_size: int
+            Batch size
+        num_classes: int
+            Number of classes
+        num_epochs: int
+            Number of epochs to train the model
+        patience: int
+            Patience for early stopping
+        optimizer: torch.optim.Optimizer
+            Optimizer to use for training
+        criterion: torch.nn.modules.loss._Loss
+            Loss function to use for training
+        wandb_log: bool
+            Whether to log to wandb or not
+        segmentation_ouput: bool
+            Whether to log segmentation image results
+        artifact_log: bool
+            Whether to log model as artifact
+
+    Returns:
+        val_dice_max: dict
+            Dictionary of maximum validation dice scores
+    '''
+
+    # wandb dir run
+    run_dir = ""
+    if wandb_log:
+        run_dir = wandb.run.dir
+
+    # setup device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # initialize loss and dice scores
+    train_loss = 0
+    train_dice = [0 for i in range(num_classes)]
+    train_iou = [0 for i in range(num_classes)]
+    train_f1_macro = 0
+
+    # initialize lists to store loss and dice scores
+    train_loss_list = []
+    train_dice_list = [[] for i in range(num_classes)]
+    train_iou_list = [[] for i in range(num_classes)]
+    train_f1_macro_list = []
+    slices_dic = {}
+
+    # setup torchmetrics
+    dice = Dice(num_classes=1, average='micro').to(device)
+    if num_classes>2:
+        f1 = F1Score(task='multiclass', num_classes=num_classes, average='macro').to(device)
+    else:
+        f1 = F1Score(task='binary', num_classes=num_classes, average='macro').to(device)
+
+    print("-------------- START TRAINING -------------- ")
+    
+    for epoch in range(num_epochs):
+
+        print(f"\nEpoch {epoch+1}/{num_epochs}")
+
+        # train
+        model.train()
+        for j, (images, labels) in tqdm(enumerate(train_dataloader), desc="training", dynamic_ncols=True):
+
+            # move images and labels to device
+            images = images.to(device)
+            labels = labels.to(device)
+            
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            # forward
+            if model.__class__.__name__ == "SwinUNETR":
+                outputs = model(images)
+                predict_softmax = nn.Softmax(dim=1)
+                model_predict_proba = predict_softmax(outputs)
+            else:
+                model_predict_proba = model.predict_proba(images)
+            loss = criterion(model_predict_proba, labels)
+
+            # backward
+            loss.backward()
+            optimizer.step()
+
+            # statistics
+            train_loss += loss.item()
+            train_f1_macro += f1(model_predict_proba.argmax(1, keepdim=True), labels.argmax(1, keepdim=True))
+            for i in range(num_classes):
+              train_dice[i] += dice(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
+              train_iou[i] += iou_score(model_predict_proba[:,i:i+1,:,:,:].reshape(-1), labels[:,i:i+1,:,:,:].reshape(-1))
+
+
+        # calculate average loss and dice scores
+        adjust_factor_train = 1 if len(train_dataloader) % 2 == 0 else len(train_dataloader)/(len(train_dataloader)+1)
+
+        train_loss = train_loss / len(train_dataloader) * batch_size * adjust_factor_train
+        for i in range(num_classes):
+          train_dice[i] = train_dice[i] / len(train_dataloader.dataset) * batch_size * adjust_factor_train
+          train_iou[i] = train_iou[i] / len(train_dataloader.dataset) * batch_size * adjust_factor_train
+
+        train_f1_macro = train_f1_macro / len(train_dataloader.dataset) * batch_size
+
+        # store loss and dice score s
+        train_loss_list.append(train_loss)
+        for i in range(num_classes):
+          train_dice_list[i].append(train_dice[i])
+          train_iou_list[i].append(train_iou[i])
+        train_f1_macro_list.append(train_f1_macro)
+
+        # calculate macro training dice and IoU scores (excluding background)
+        train_dice_macro = np.mean([max(train_dice_list[i]).cpu().numpy() for i in range(1, num_classes)])
+        train_iou_macro = np.mean([max(train_iou_list[i]) for i in range(1, num_classes)])
+
+        # print epoch results
+        print(f"--> Train Loss: {train_loss:.4f}")
+        print(f"--> Train F1_macro: {train_f1_macro:.4f}")
+        if num_classes > 2:
+            print(f"--> Train Dice_macro: {train_dice_macro:.4f}")
+            print(f"--> Train IoU_macro: {train_iou_macro:.4f}")
+        print('-----')
+        for i in range(num_classes):
+          print(f"--> Train Dice {i}: {train_dice[i]:.4f}")
+          print(f"--> Train IoU {i}: {train_iou[i]:.4f}")
+
+        # log to wandb
+        if wandb_log:
+            wandb_dict = {
+                "epoch": (epoch+1),
+                "train_loss": train_loss,
+                "train_f1_macro": train_f1_macro,
+                } | {
+                    f"train_dice_{i}": train_dice[i] for i in range(1, num_classes)
+                } | {
+                    f"train_iou_{i}": train_iou[i] for i in range(1, num_classes)
+                }
+            if num_classes > 2:
+                wandb_dict = wandb_dict | {
+                    "train_dice_macro": train_dice_macro
+                } | {
+                    "train_iou_macro": train_iou_macro
+                }
+            if segmentation_ouput:
+                wandb_dict = wandb_dict | slices_dic
+            wandb.log(wandb_dict)
+
+        # save best model
+        if artifact_log:
+            torch.save(model.state_dict(), f"{run_dir}/last_model.pt")
+            if wandb_log:
+                wandb.save(f"{run_dir}/last_model.pt", base_path=run_dir)
+
+        # reset params
+        train_loss = 0
+        train_dice = [0 for i in range(num_classes)]
+        train_iou = [0 for i in range(num_classes)]
+        train_f1_macro = 0
+        slices_dic = {}
+
+    if wandb_log:
+        if artifact_log:
+            artifact = wandb.Artifact(
+                f"{model.__class__.__name__}", 
+                type="model", 
+                description=f"Last epoch trained model using train set only"
+            )
+            artifact.add_file(f"{run_dir}/last_model.pt")
+            wandb.log_artifact(artifact)

@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 
 class MedicalImageDataset(Dataset):
-    def __init__(self, path, num_classes=2, train=True, normalize=True, resize=None, transform=None):
+    def __init__(self, path, num_classes=2, train=True, train_only=False, normalize=True, resize=None, transform=None):
         '''
         Initialize the custom dataset for segmentation of 3D medical images
         
@@ -21,6 +21,8 @@ class MedicalImageDataset(Dataset):
                 Number of classes in the dataset
             train: bool
                 Whether to load the train or validation split
+            train_only: bool
+                Whether to load the train split only
             normalize: bool
                 Whether to normalize the images and labels between 0 and 1
             resize: tuple(int, int, int)
@@ -35,10 +37,18 @@ class MedicalImageDataset(Dataset):
         self.resize = resize
         self.transform = transform
 
+        # get the filenames of the images and labels
         filenames = sorted(os.listdir(path))
         images_filenames = filenames[:len(filenames)//2]
         labels_filenames = filenames[len(filenames)//2:]
 
+        # load the train split only
+        if train_only:
+            self.images_files = images_filenames
+            self.labels_files = labels_filenames
+            return
+        
+        # split the data into train and validation
         train_images_files, val_images_files, train_labels_files, val_labels_files = train_test_split(
             images_filenames, 
             labels_filenames, 
@@ -46,6 +56,7 @@ class MedicalImageDataset(Dataset):
             random_state=42
         )
 
+        # load the train or validation split
         if train:
             self.images_files = train_images_files
             self.labels_files = train_labels_files

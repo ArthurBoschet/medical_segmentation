@@ -1,6 +1,7 @@
 import torch
 import wandb
 from training.train import train
+from training.train import train_without_validation
 
 
 def log_wandb_run(model, 
@@ -16,7 +17,8 @@ def log_wandb_run(model,
                   segmentation_ouput=False,
                   run_name=None,
                   offline=False,
-                  wandb_dir=None
+                  wandb_dir=None,
+                  train_only=False
                   ):
     ''' 
     Train a U-Net model
@@ -50,6 +52,8 @@ def log_wandb_run(model,
             Whether to log to wandb offline
         wandb_dir: str
             Directory to save wandb logs
+        train_only: bool
+            Whether to train on train set only
     '''
 
     # setup device
@@ -89,20 +93,34 @@ def log_wandb_run(model,
                 dir=wandb_dir)
     wandb.watch(model, log="all")
 
-    _ = train(model, 
-              train_dataloader, 
-              val_dataloader, 
-              batch_size,
-              num_classes,
-              num_epochs=num_epochs, 
-              patience=patience, 
-              optimizer=optimizer, 
-              criterion=criterion, 
-              scheduler=scheduler,
-              wandb_log=True,
-              segmentation_ouput=segmentation_ouput,
-              artifact_log=True,
-              )
+    if train_only:
+        print("Training on train set only")
+        _ = train_without_validation(model,
+                                     train_dataloader,
+                                     batch_size=batch_size,
+                                     num_classes=num_classes,
+                                     num_epochs=num_epochs,
+                                     optimizer=optimizer,
+                                     criterion=criterion,
+                                     wandb_log=True,
+                                     segmentation_ouput=segmentation_ouput,
+                                     artifact_log=True,
+                                     )
+    else:
+        _ = train(model, 
+                train_dataloader, 
+                val_dataloader, 
+                batch_size,
+                num_classes,
+                num_epochs=num_epochs, 
+                patience=patience, 
+                optimizer=optimizer, 
+                criterion=criterion, 
+                scheduler=scheduler,
+                wandb_log=True,
+                segmentation_ouput=segmentation_ouput,
+                artifact_log=False,
+                )
     
     #terminate run
     wandb.finish()

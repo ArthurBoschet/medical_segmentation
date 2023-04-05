@@ -56,6 +56,50 @@ def load_data(data_folder_path,
     return train_dataloader, val_dataloader
 
 
+def load_data_train_only(data_folder_path,
+                         batch_size=2, 
+                         num_classes=2,
+                         shuffle=True,
+                         normalize=True,
+                         resize=None,
+                         transform=None):
+    '''
+    Load the only the train data for the task into pytorch DataLoader
+
+    Args:
+        data_folder_path: str
+            Path to the folder containing the train data for the task (images and labels)
+        batch_size: int
+            Batch size for the DataLoader
+        num_classes: int
+            Number of classes in the dataset
+        shuffle: bool
+            Whether to shuffle the data in the DataLoader
+        normalize: bool
+            Whether to normalize the images and labels between 0 and 1
+        resize: tuple
+            Size to resize the images and labels to
+            Remember: (depth, height, width)
+        transform: torchvision.transforms
+            Transformations to apply to the images and labels
+    '''
+    # create the pytorch dataset
+    train_dataset = MedicalImageDataset(os.path.join(data_folder_path, 'train_val'), num_classes=num_classes, train=True, train_only=True, normalize=normalize, resize=resize, transform=transform)
+
+    # create the pytorch dataloader
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+
+    # add custom keys
+    train_dataloader.dataset.input_size = resize
+    train_dataloader.dataset.dataset_task = data_folder_path.split('/')[-1]
+    train_dataloader.dataset.num_classes = num_classes
+    train_dataloader.dataset.shuffle = shuffle
+    train_dataloader.dataset.normalize = normalize
+    train_dataloader.dataset.transform = transform
+
+    return train_dataloader
+
+
 def load_data_kfold(data_folder_path,
                     k_folds=5,
                     fold=0,
