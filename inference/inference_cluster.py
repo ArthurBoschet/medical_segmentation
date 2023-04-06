@@ -65,13 +65,14 @@ if __name__ == "__main__":
     with open(os.path.join(dataset_path, task_name, "dataset.json"), "r") as f:
         dataset_json = json.load(f)
     num_classes = len(dataset_json["labels"])
+    num_channels = len(dataset_json["modality"])
 
     # load weights into model
-    print("Loading weights into model")
+    print("Loading weights into model...")
     if torch.cuda.is_available():
-        model = make_model(config=model_config, input_shape=(1, resize[0], resize[1], resize[2]), num_classes=num_classes)
+        model = make_model(config=model_config, input_shape=(num_channels, resize[0], resize[1], resize[2]), num_classes=num_classes)
         if os.path.exists(weights_dir):
-            weights = torch.load(os.path.join(weights_dir, "best_model.pt"))
+            weights = torch.load(os.path.join(weights_dir, "last_model.pt"))
             model.load_state_dict(weights)
             print("Weights loaded successfully")
         else:

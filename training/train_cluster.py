@@ -146,7 +146,9 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         criterion = DiceCELoss(to_onehot_y=False)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=factor, patience=lr_patience)
-        run_name = f"{model.__class__.__name__}_{task_name}"
+
+        # setup run name
+        run_name = f"{model.__class__.__name__}"
 
         # train model
         if train_only:

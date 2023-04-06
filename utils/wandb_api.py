@@ -73,7 +73,7 @@ def sync_offline_runs(folder_path, delete=False):
             if delete:
                 shutil.rmtree(wandb_folder)
 
-def download_weights_wandb(username, project_name, artifact_name, artifact_version):
+def download_weights_wandb(username, project_name, artifact_name, artifact_version, output_dir):
     '''
     Download model weights from wandb
 
@@ -86,16 +86,18 @@ def download_weights_wandb(username, project_name, artifact_name, artifact_versi
             Name of the wandb artifact
         artifact_version: str
             Version of the wandb artifact
+        output_dir: str
+            Path to the directory where the weights should be saved
     '''
     # set up the api instance
-    artifact_path = os.path.join(username, project_name, f"{artifact_name}:v{artifact_version}")
+    artifact_path = os.path.join(username, project_name, f"{artifact_name}:{artifact_version}")
 
     # set up the weights artifact
     api = wandb.Api()
     artifact = api.artifact(artifact_path)
 
     # setup output directory
-    output_dir = os.path.join('/home/jaggbow/scratch/clem/weights', project_name, artifact_name, artifact_version)
+    output_dir = os.path.join(output_dir, project_name, artifact_name, artifact_version)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

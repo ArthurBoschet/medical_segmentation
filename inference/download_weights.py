@@ -29,4 +29,5 @@ if __name__ == "__main__":
     download_weights_wandb("enzymes", 
                            task_name, 
                            model_name, 
-                           version)
+                           version, 
+                           '/home/jaggbow/scratch/clem/weights')

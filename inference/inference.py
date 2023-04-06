@@ -61,7 +61,11 @@ def model_inference(model,
     with torch.no_grad():
         for i, (input, idx) in tqdm(enumerate(zip(test_dataloader, output_filenames_idx))):
             resize = np.load(os.path.join(os.path.join(test_folder_path, filenames[i]))).shape
-            output = model.predict(input.to(device)).float()
+            if model.__class__.__name__ != "SwinUNETR":
+                output = model.predict(input.to(device)).float()
+            else:
+                output = model(input.to(device))
+                output = torch.argmax(output, 1, keepdim=True).float()
             output = torch.nn.functional.interpolate(output, size=tuple((resize[1], resize[2], resize[3])), mode='trilinear')
             output = torch.round(output)
             label = output[0][0].cpu().numpy().astype(np.int8)
