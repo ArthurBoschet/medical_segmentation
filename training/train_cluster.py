@@ -12,8 +12,9 @@ import argparse
 
 from monai.losses import DiceCELoss
 
-from utils.data_utils import convert_niigz_to_numpy, prepare_dataset_for_training_local
+from utils.data_utils import convert_niigz_to_numpy
 from preprocessing.data_loader import load_data, load_data_train_only
+from preprocessing.preprocess import prepare_dataset_for_training
 from experiments.make_model import make_model
 from log_wandb import log_wandb_run
 from log_wandb_kfold import log_wandb_run_kfold
@@ -93,7 +94,7 @@ if __name__ == "__main__":
             assert len(os.listdir(os.path.join(task_folder_path, "imagesTs")))==dataset_json["numTest"], "Number of test images does not match dataset.json"
             print("Numpy files already exist")
         print("Preparing dataset for training...")
-        prepare_dataset_for_training_local(task_folder_path)
+        prepare_dataset_for_training(task_folder_path)
         print("Done")
     else:
         assert len(os.listdir(os.path.join(task_folder_path, "train_val")))==dataset_json["numTraining"]*2, "Number of training images and labels does not match dataset.json"
