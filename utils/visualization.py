@@ -5,6 +5,7 @@ import nibabel as nib
 import pandas as pd
 import matplotlib.pyplot as plt
 from ipywidgets import interact
+from tqdm import tqdm
 
 def visualize_positional_encodings(pos_encoding, figsize=(15,10), title="Positional Encodings"):
     '''
@@ -111,11 +112,11 @@ def visualize_infered_labels(test_dataloader, labels_path, alpha=0.3, figsize=(8
     filenames = sorted(os.listdir(labels_path))
     max_depth = 0
     # determine max depth of labels
-    for filename in filenames:
+    for filename in tqdm(filenames):
         if filename.endswith(".nii.gz"):
             label = nib.load(os.path.join(labels_path, filename)).get_fdata()
             if label.shape[-1] > max_depth:
-                max_depth = label.shape[0]
+                max_depth = label.shape[-1]
             
     @interact
     def plot_slice(image=(1, len(test_dataloader.dataset)),
