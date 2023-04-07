@@ -55,7 +55,7 @@ def model_inference(model,
     test_folder_path = os.path.join(dataset_dir, "test")
     filenames = sorted(os.listdir(test_folder_path))
 
-    print("Inference on test set...")
+    print("------- Inference on test set...")
 
     model.eval()
     with torch.no_grad():

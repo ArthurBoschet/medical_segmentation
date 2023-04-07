@@ -94,14 +94,19 @@ def download_weights_wandb(username, project_name, artifact_name, artifact_versi
 
     # set up the weights artifact
     api = wandb.Api()
-    artifact = api.artifact(artifact_path)
 
     # setup output directory
     output_dir = os.path.join(output_dir, project_name, artifact_name, artifact_version)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
-    # download the artifact
-    weights_path = artifact.download(root=output_dir)
-
-    print(f"Model weights downloaded to {weights_path} and loaded into PyTorch model correctly")
+    # check if the artifact exists on wandb
+    try:
+        # get the artifact
+        artifact = api.artifact(artifact_path)
+        # create the output directory
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        # download the artifact
+        weights_path = artifact.download(root=output_dir)
+        print(f"----- Model weights downloaded to {weights_path}")
+    except:
+        print(f"----- Artifact {artifact_name} does not exist in the project {project_name}")
