@@ -31,9 +31,6 @@ def model_inference(model,
         output_filenames_idx: list(int)
             List of indices of the output filenames index
     '''
-    current_time = datetime.datetime.now()
-    timestamp_str = current_time.strftime("%Y_%m_%d-%H_%M_%S")
-
     task_name_dic = {
         "Task01_BrainTumour": "BRATS",
         "Task02_Heart": "la",
@@ -47,15 +44,12 @@ def model_inference(model,
         "Task10_Colon": "colon",
     }
 
-    if not os.path.exists(os.path.join(output_folder, timestamp_str)):
-        os.makedirs(os.path.join(output_folder, timestamp_str))
-    output_folder = os.path.join(output_folder, timestamp_str)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     test_folder_path = os.path.join(dataset_dir, "test")
     filenames = sorted(os.listdir(test_folder_path))
-
-    print("------- Inference on test set...")
 
     model.eval()
     with torch.no_grad():

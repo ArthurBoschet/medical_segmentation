@@ -55,13 +55,13 @@ if __name__ == "__main__":
                      "UNetConvSkip": "unet_convskip.json",
                      "SwinUNETR": "swin_unetr.json"}
     print("Performing inference on all tasks and models...")
-    for task_name in task_names:
-        print(f"- {task_name}...")
-        for model_name, model_config in model_configs.items():
-            print(f"--- Inference on model: {model_name}...")
+    for model_name, model_config in model_configs.items():
+        print(f"- {model_name}...")
+        for task_name in task_names:
+            print(f"--- Inference on task: {task_name}...")
             # if not already infered, perform inference on model
-            if not os.path.exists(os.path.join(output_folder, task_name, model_name)):
-                weights_dir = os.path.join('/home/jaggbow/scratch/clem/weights', task_name, model_name, "v0")
+            if not os.path.exists(os.path.join(output_folder, model_name, task_name)):
+                weights_dir = os.path.join('/home/jaggbow/scratch/clem/weights', model_name, task_name, "v0")
                 # if weights directory exists, load weights and perform inference
                 if os.path.exists(weights_dir):
                     # load dataset.json file
@@ -89,18 +89,20 @@ if __name__ == "__main__":
                     shuffle = False
                     normalize = True
                     transform = None
-                    output_folder_temp = os.path.join(output_folder, task_name, model_name, "v0")
+                    output_folder_temp = os.path.join(output_folder, model_name, task_name)
                     task_folder_path = os.path.join(dataset_path, task_name)
                     output_filenames = sorted(os.listdir(os.path.join(task_folder_path, "test")))
                     output_filenames_idx = [filename[-7:-4] for filename in output_filenames]
 
                     # load test dataloader
                     test_dataloader = load_test_data(task_folder_path,
-                                                    batch_size=batch_size,
-                                                    shuffle=shuffle,
-                                                    normalize=normalize,
-                                                    resize=resize,
-                                                    transform=transform)
+                                                     batch_size=batch_size,
+                                                     shuffle=shuffle,
+                                                     normalize=normalize,
+                                                     resize=resize,
+                                                     transform=transform)
+                    
+                    print("----- Inference on test set...")
 
                     # perform inference on model and save output labels
                     model_inference(model,
@@ -114,4 +116,4 @@ if __name__ == "__main__":
                 else:
                     print(f"----- Weights directory does not exist: {weights_dir}")
             else:
-                print(f"----- Inference already performed on model: {model_name}")
+                print(f"----- Inference already performed on task: {task_name}")

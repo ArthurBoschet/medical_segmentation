@@ -96,7 +96,7 @@ def download_weights_wandb(username, project_name, artifact_name, artifact_versi
     api = wandb.Api()
 
     # setup output directory
-    output_dir = os.path.join(output_dir, project_name, artifact_name, artifact_version)
+    output_dir = os.path.join(output_dir, artifact_name, project_name, artifact_version)
 
     # check if the artifact exists on wandb
     try:

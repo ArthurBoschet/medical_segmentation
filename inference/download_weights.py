@@ -23,17 +23,18 @@ if __name__ == "__main__":
                    "UNetConvSkip", 
                    "SwinUNETR"]
     weights_dir = f'/home/jaggbow/scratch/clem/weights'
+    version = "v0"
     print("Downloading all weights...")
-    for task_name in task_names:
-        print(f"- {task_name}...")
-        for model_name in model_names:
-            print(f"--- Downloading weights for model: {model_name}...")
-            if not os.path.exists(os.path.join(weights_dir, task_name, model_name, "v0")):
+    for model_name in model_names:
+        print(f"- {model_name}...")
+        for task_name in task_names:
+            print(f"--- Downloading weights for model: {task_name}...")
+            if not os.path.exists(os.path.join(weights_dir, model_name, task_name, version)):
                 # download model weights from wandb
                 download_weights_wandb("enzymes", 
                                        task_name, 
                                        model_name, 
-                                       "v0", 
+                                       version, 
                                        weights_dir)
             else:
                 print(f"----- Weights for model {model_name} already downloaded, skipping...")
